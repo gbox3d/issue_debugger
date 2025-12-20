@@ -1,0 +1,38 @@
+graph TD
+    User_Input("📄 입력 데이터<br>뉴스 기사, 댓글, 찌라시")
+
+    subgraph Preprocessing [전처리 단계]
+        Claim_Ext("🔍 주장 추출기<br>사실 vs 의견 분리")
+    end
+
+    subgraph Verification [교차 검증 단계 Multi Agent]
+        Agent_A("⏱️ 시계열 및 출처 추적<br>최초 유포지 확인")
+        Agent_B("⚖️ 팩트 대조 엔진<br>RAG 신뢰 DB 비교")
+        Agent_C("📢 의도 및 성향 분석<br>선동성 편향성 탐지")
+    end
+
+    subgraph KnowledgeBase [데이터 베이스]
+        Trusted_DB[("🗄️ 신뢰 데이터 저장소")]
+        Web_Search(("🌐 실시간 웹 검색"))
+    end
+
+    Result_Agg("📊 종합 스코어링")
+    Final_Report("📝 최종 검증 리포트<br>판정 진실 거짓 보류")
+
+    User_Input --> Claim_Ext
+    Claim_Ext --> Agent_A
+    Claim_Ext --> Agent_B
+    Claim_Ext --> Agent_C
+    
+    Agent_A <--> Web_Search
+    Agent_B <--> Trusted_DB
+    Agent_B <--> Web_Search
+    Agent_C --> Result_Agg
+    
+    Agent_A --> Result_Agg
+    Agent_B --> Result_Agg
+    
+    Result_Agg --> Final_Report
+    
+    style User_Input fill:#f9f,stroke:#333,stroke-width:2px
+    style Final_Report fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
