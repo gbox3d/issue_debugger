@@ -2,21 +2,31 @@ import express from "express";
 import { config } from "./config.js";
 import { verifyRouter } from "./routes/verify.js";
 import { logInfo } from "./utils/logger.js";
-import { getOllamaInfo } from "./services/llm/ollamaClient.js";
+import { getOllamaInfo as getLlmInfo } from "./services/llm/ollamaClient.js";
 
 const app = express();
+
+// CORS
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
+
 app.use(express.json({ limit: "2mb" }));
 
 // version check endpoint
 app.get("/version", async (req, res) => {
-  const ollama = await getOllamaInfo();
+  const llm = await getLlmInfo();
 
   res.json({
     app: {
-      name: "issue-debugger",
+      name: "marbas",
       version: config.version
     },
-    ollama
+    llm
   });
 });
 
@@ -24,5 +34,5 @@ app.get("/health", (req, res) => res.json({ ok: true }));
 app.use("/api", verifyRouter);
 
 app.listen(config.port, () => {
-  logInfo(`Issue-Debugger server listening on http://localhost:${config.port}`);
+  logInfo(`Marbas server listening on http://localhost:${config.port}`);
 });

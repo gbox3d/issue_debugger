@@ -19,10 +19,10 @@ loadEnvFile();
 export const config = {
   port: Number(process.env.PORT ?? 8080),
   version: "0.1.0",
-  ollama: {
-    baseUrl: process.env.OLLAMA_BASE_URL ?? "http://127.0.0.1:11434",
-    model: process.env.OLLAMA_MODEL ?? "gpt-oss:20b",
-    timeoutMs: Number(process.env.OLLAMA_TIMEOUT_MS ?? 60000)
+  openai: {
+    apiKey: process.env.OPENAI_API_KEY ?? "",
+    model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
+    timeoutMs: Number(process.env.OPENAI_TIMEOUT_MS ?? 60000),
   },
 
   rag: {

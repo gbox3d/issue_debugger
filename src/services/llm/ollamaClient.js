@@ -3,35 +3,37 @@ import { safeJsonParse, extractFirstJsonObject } from "../../utils/json.js";
 import { logWarn } from "../../utils/logger.js";
 
 /**
- * Ollama /api/chat 사용 (Node 20 fetch)
- * - JSON 출력 강제: 모델이 텍스트를 섞어도 JSON만 추출
+ * OpenAI Chat Completions API — JSON 출력 강제
  */
 export async function ollamaChatJson({ messages, schemaName, temperature = 0.2 }) {
   const controller = new AbortController();
-  const t = setTimeout(() => controller.abort(), config.ollama.timeoutMs);
+  const t = setTimeout(() => controller.abort(), config.openai.timeoutMs);
 
   try {
-    const resp = await fetch(`${config.ollama.baseUrl}/api/chat`, {
+    const resp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${config.openai.apiKey}`,
+      },
       signal: controller.signal,
       body: JSON.stringify({
-        model: config.ollama.model,
+        model: config.openai.model,
         messages,
-        stream: false,
-        options: { temperature }
-      })
+        temperature,
+        response_format: { type: "json_object" },
+      }),
     });
 
     if (!resp.ok) {
       const body = await resp.text().catch(() => "");
-      throw new Error(`Ollama error: ${resp.status} ${resp.statusText} ${body}`);
+      throw new Error(`OpenAI error: ${resp.status} ${resp.statusText} ${body}`);
     }
 
     const data = await resp.json();
-    const content = data?.message?.content ?? "";
+    const content = data?.choices?.[0]?.message?.content ?? "";
 
-    // 1차: 통으로 JSON 파싱 시도
+    // 1차: 통으로 JSON 파싱
     const direct = safeJsonParse(content);
     if (direct.ok && typeof direct.value === "object") return direct.value;
 
@@ -47,26 +49,10 @@ export async function ollamaChatJson({ messages, schemaName, temperature = 0.2 }
   }
 }
 
-
 export async function getOllamaInfo() {
-  try {
-    // 1) Ollama 서버 버전
-    const vRes = await fetch(`${config.ollama.baseUrl}/api/version`);
-    const version = vRes.ok ? await vRes.json() : null;
-
-    // 2) 로컬 모델 목록
-    const mRes = await fetch(`${config.ollama.baseUrl}/api/tags`);
-    const models = mRes.ok ? await mRes.json() : null;
-
-    return {
-      ok: true,
-      server: version,
-      models
-    };
-  } catch (e) {
-    return {
-      ok: false,
-      error: String(e.message ?? e)
-    };
-  }
+  return {
+    ok: true,
+    provider: "openai",
+    model: config.openai.model,
+  };
 }

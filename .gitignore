@@ -1,3 +1,5 @@
 node_modules/
 temp/
 src/services/rag/*_db.json
+dist/
+.env

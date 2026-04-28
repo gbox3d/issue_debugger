@@ -1,0 +1,27 @@
+.result-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.result-title {
+  font-size: 1.2rem;
+  color: var(--text);
+}
+
+.result-count {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.result-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.result-empty {
+  text-align: center;
+  color: var(--text-dim);
+  padding: 2rem;
+}

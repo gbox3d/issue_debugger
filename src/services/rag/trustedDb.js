@@ -5,8 +5,12 @@ let _dbCache = null;
 
 function loadDb() {
   if (_dbCache) return _dbCache;
-  const raw = fs.readFileSync(config.rag.trustedDbPath, "utf-8");
-  _dbCache = JSON.parse(raw);
+  try {
+    const raw = fs.readFileSync(config.rag.trustedDbPath, "utf-8");
+    _dbCache = JSON.parse(raw);
+  } catch {
+    _dbCache = { docs: [] };
+  }
   if (!Array.isArray(_dbCache.docs)) _dbCache.docs = [];
   return _dbCache;
 }
