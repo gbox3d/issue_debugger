@@ -4,6 +4,24 @@ Marbas는 실시간 이슈, 소문, 기사 본문을 넣으면 사실 주장 단
 
 현재 저장소의 프로토타입은 로컬 Ollama 기반이지만, 초기 제품화 계획은 `ChatGPT API(OpenAI API)`를 기본 LLM 백엔드로 사용하는 방향입니다. 코드명은 `Marbas`, 서비스 성격은 `issue verification / fact checking assistant`에 가깝고, 설계 성향은 `agent-first`에 가깝습니다.
 
+## 목차
+
+- [What It Does Now](#what-it-does-now)
+- [Architecture](#architecture)
+- [API](#api)
+  - [GET /health](#get-health)
+  - [GET /version](#get-version)
+  - [POST /api/verify](#post-apiverify)
+- [Local Run](#local-run)
+- [Current Status](#current-status)
+- [Naming](#naming)
+- [About Marbas](#about-marbas)
+- [Disclaimer](#disclaimer)
+- [Frontend](#frontend)
+- [Planning Notes](#planning-notes)
+
+---
+
 ## What It Does Now
 
 - `POST /api/verify`로 입력 텍스트를 받아 사실 주장들을 추출합니다.

@@ -1,5 +1,16 @@
 # _forAI Guide
 
+## 목차
+
+- [One-line summary](#one-line-summary)
+- [Read order](#read-order)
+- [File roles](#file-roles)
+- [Quick Project Map](#quick-project-map)
+- [Careful Points](#careful-points)
+- [Repository](#repository)
+
+---
+
 ## One-line summary
 
 `issue_debugger` is the Marbas prototype: a Korean issue verification and fact-checking assistant with an Express API, OpenAI-backed agent pipeline, local trusted-source RAG stub, and React frontend.

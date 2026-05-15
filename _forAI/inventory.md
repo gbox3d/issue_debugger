@@ -1,5 +1,18 @@
 # Inventory
 
+## 목차
+
+- [Repository](#repository)
+- [Top-level structure](#top-level-structure)
+- [Entrypoints](#entrypoints)
+- [Backend Flow](#backend-flow)
+- [LLM / Evidence Layer](#llm--evidence-layer)
+- [Frontend](#frontend)
+- [Tests](#tests)
+- [Notes](#notes)
+
+---
+
 ## Repository
 
 - Name: `issue_debugger`

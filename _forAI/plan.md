@@ -3,6 +3,24 @@
 > 최종 갱신: 2026-04-28
 > 연결 문서: [../docs/architecture.md](../docs/architecture.md), [../docs/ref.md](../docs/ref.md), [./dev_log.md](./dev_log.md)
 
+## 목차
+
+- [Summary](#summary)
+- [Implementation Changes](#implementation-changes)
+  - [Layer A — MVP 안정화 (Phase 1~4)](#layer-a--mvp-안정화-phase-14)
+  - [Layer B — 다층 검증 모델 (Phase 5~7)](#layer-b--다층-검증-모델-phase-57)
+  - [Layer C — 검증 인프라 / 데이터 자산화 (Phase 8~9)](#layer-c--검증-인프라--데이터-자산화-phase-89)
+  - [Layer D — Student sLLM 자립화 (Phase 10~12)](#layer-d--student-sllm-자립화-phase-1012)
+- [Public APIs / Types](#public-apis--types)
+- [Test Plan](#test-plan)
+  - [MVP / 검증 모델 (Phase 1~7)](#mvp--검증-모델-phase-17)
+  - [검증 인프라 / 데이터셋 (Phase 8~9)](#검증-인프라--데이터셋-phase-89)
+  - [Student / 라우팅 (Phase 10~12)](#student--라우팅-phase-1012)
+- [Assumptions](#assumptions)
+- [Versioning Policy](#versioning-policy)
+
+---
+
 ## Summary
 - 현재 구현된 범위는 `Express 서버`, `/health`, `/version`, `POST /api/verify`, LLM 기반 `claim extraction`, claim별 `출처 추적(A) / 팩트체크(B) / 의도·편향(C)` 병렬 분석, 최종 `aggregate/report` 생성까지다.
 - 입력 형태는 `{ text, url?, collected_at? }`이고, 현재는 `text`가 필수이며 `url`은 전달만 되고 실제 본문 수집에는 쓰이지 않는다.
