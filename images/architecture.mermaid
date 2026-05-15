@@ -1,14 +1,14 @@
 graph TD
     User_Input("📄 입력 데이터<br>뉴스 기사, 댓글, 찌라시")
 
-    subgraph Preprocessing [전처리 단계]
-        Claim_Ext("🔍 주장 추출기<br>사실 vs 의견 분리")
+    subgraph Preprocessing [전처리 단계 · 가]
+        Claim_Ext("🔍 주장 추출기<br>2-Pass LLM<br>사실 vs 의견 분리")
     end
 
-    subgraph Verification [교차 검증 단계 Multi Agent]
-        Agent_A("⏱️ 시계열 및 출처 추적<br>최초 유포지 확인")
-        Agent_B("⚖️ 팩트 대조 엔진<br>RAG 신뢰 DB 비교")
-        Agent_C("📢 의도 및 성향 분석<br>선동성 편향성 탐지")
+    subgraph Analysis [단위 분석 모듈 · 나·다·라]
+        Agent_A("⏱️ 시계열·출처 추적<br>(다)")
+        Agent_B("⚖️ 팩트 대조 엔진<br>(나) RAG")
+        Agent_C("📢 의도·성향 분석<br>(라)")
     end
 
     subgraph KnowledgeBase [데이터 베이스]
@@ -16,23 +16,34 @@ graph TD
         Web_Search(("🌐 실시간 웹 검색"))
     end
 
-    Result_Agg("📊 종합 스코어링")
-    Final_Report("📝 최종 검증 리포트<br>판정 진실 거짓 보류")
+    subgraph Debate [교차 토론 단계 · 마 · Multi-Model]
+        Debate_Pro("🟢 찬성 측 AI<br>Model X")
+        Debate_Con("🔴 반대 측 AI<br>Model Y")
+        Debate_Mod("⚖️ 중재자 AI<br>선택 구성")
+        Debate_Pro <--> Debate_Con
+        Debate_Mod -.-> Debate_Pro
+        Debate_Mod -.-> Debate_Con
+    end
+
+    Result_Agg("📊 종합 스코어링 · 바<br>합의 시: verdict<br>미합의: 보류/혼재")
+    Final_Report("📝 최종 검증 리포트<br>토론 로그 + 근거 + 잔여 쟁점")
 
     User_Input --> Claim_Ext
     Claim_Ext --> Agent_A
     Claim_Ext --> Agent_B
     Claim_Ext --> Agent_C
-    
+
     Agent_A <--> Web_Search
     Agent_B <--> Trusted_DB
     Agent_B <--> Web_Search
-    Agent_C --> Result_Agg
-    
-    Agent_A --> Result_Agg
-    Agent_B --> Result_Agg
-    
+
+    Analysis --> Debate
+    Debate -.추가 검색.-> Trusted_DB
+    Debate -.추가 검색.-> Web_Search
+
+    Debate --> Result_Agg
     Result_Agg --> Final_Report
-    
+
     style User_Input fill:#f9f,stroke:#333,stroke-width:2px
     style Final_Report fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style Debate fill:#fff4e6,stroke:#d8943a,stroke-width:2px

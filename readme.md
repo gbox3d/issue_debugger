@@ -13,9 +13,61 @@ Marbas는 실시간 이슈, 소문, 기사 본문을 넣으면 사실 주장 단
   - `Agent C`: 선동성, 편향, 감정 유발 위험을 분석합니다.
 - 마지막에 aggregator가 최종 `true | false | hold` 판정과 경고 메시지를 조합합니다.
 
-## Current Architecture
+## Architecture
 
-![architecture](./images/architecture.png)
+> 본 도식은 [특허 v4 개정안](./docs/특허_내용_v4.md) 기준의 목표 아키텍처입니다. 현재 구현 상태는 [src/server.js](./src/server.js) 등 코드 진입점 참조. 도식 원본은 [images/architecture.mermaid](./images/architecture.mermaid).
+
+```mermaid
+graph TD
+    User_Input("📄 입력 데이터<br>뉴스 기사, 댓글, 찌라시")
+
+    subgraph Preprocessing [전처리 단계 · 가]
+        Claim_Ext("🔍 주장 추출기<br>2-Pass LLM<br>사실 vs 의견 분리")
+    end
+
+    subgraph Analysis [단위 분석 모듈 · 나·다·라]
+        Agent_A("⏱️ 시계열·출처 추적<br>(다)")
+        Agent_B("⚖️ 팩트 대조 엔진<br>(나) RAG")
+        Agent_C("📢 의도·성향 분석<br>(라)")
+    end
+
+    subgraph KnowledgeBase [데이터 베이스]
+        Trusted_DB[("🗄️ 신뢰 데이터 저장소")]
+        Web_Search(("🌐 실시간 웹 검색"))
+    end
+
+    subgraph Debate [교차 토론 단계 · 마 · Multi-Model]
+        Debate_Pro("🟢 찬성 측 AI<br>Model X")
+        Debate_Con("🔴 반대 측 AI<br>Model Y")
+        Debate_Mod("⚖️ 중재자 AI<br>선택 구성")
+        Debate_Pro <--> Debate_Con
+        Debate_Mod -.-> Debate_Pro
+        Debate_Mod -.-> Debate_Con
+    end
+
+    Result_Agg("📊 종합 스코어링 · 바<br>합의 시: verdict<br>미합의: 보류/혼재")
+    Final_Report("📝 최종 검증 리포트<br>토론 로그 + 근거 + 잔여 쟁점")
+
+    User_Input --> Claim_Ext
+    Claim_Ext --> Agent_A
+    Claim_Ext --> Agent_B
+    Claim_Ext --> Agent_C
+
+    Agent_A <--> Web_Search
+    Agent_B <--> Trusted_DB
+    Agent_B <--> Web_Search
+
+    Analysis --> Debate
+    Debate -.추가 검색.-> Trusted_DB
+    Debate -.추가 검색.-> Web_Search
+
+    Debate --> Result_Agg
+    Result_Agg --> Final_Report
+
+    style User_Input fill:#f9f,stroke:#333,stroke-width:2px
+    style Final_Report fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style Debate fill:#fff4e6,stroke:#d8943a,stroke-width:2px
+```
 
 현재 파이프라인은 아래 흐름으로 구성되어 있습니다.
 
