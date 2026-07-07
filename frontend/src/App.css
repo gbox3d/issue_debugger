@@ -25,3 +25,17 @@
   0%, 100% { opacity: 0.5; }
   50% { opacity: 1; }
 }
+
+/* 좌상단 버전 표시 */
+.version-badge {
+  position: fixed;
+  top: 8px;
+  left: 10px;
+  z-index: 20;
+  font-size: 0.62rem;
+  color: var(--text-dim);
+  opacity: 0.55;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
