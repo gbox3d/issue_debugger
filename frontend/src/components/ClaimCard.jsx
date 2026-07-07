@@ -57,7 +57,7 @@ export default function ClaimCard({ result }) {
       <div className="score-grid">
         <ScoreBar label="사실 근거" value={agg?.score_breakdown?.fact_confidence} />
         <ScoreBar label="출처 신뢰" value={agg?.score_breakdown?.source_reliability} />
-        <ScoreBar label="선동 위험" value={agg?.score_breakdown?.propaganda_risk} invert />
+        <ScoreBar label="감정 자극도" value={agg?.score_breakdown?.propaganda_risk} invert />
       </div>
 
       {/* Warnings */}
@@ -105,9 +105,9 @@ export default function ClaimCard({ result }) {
       {/* Bias / Intent */}
       {agentC && (
         <details className="claim-details">
-          <summary>편향/선동 분석</summary>
+          <summary>편향/감정 분석</summary>
           <div className="bias-grid">
-            <span>선동성: {pct(agentC.propaganda_score)}</span>
+            <span>설득·자극성: {pct(agentC.propaganda_score)}</span>
             <span>편향: {pct(agentC.bias_score)}</span>
             <span>감정유발: {pct(agentC.emotion_trigger_score)}</span>
           </div>

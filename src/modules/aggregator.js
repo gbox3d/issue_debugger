@@ -30,7 +30,7 @@ export function aggregate({ claim, agentA, agentB, agentC }) {
 
   const warnings = [];
   if (finalVerdict === "hold" && factConfidence < 0.7) warnings.push("근거 부족/상충으로 보류");
-  if (propagandaRisk >= 0.75) warnings.push("선동/편향 위험이 높아 확산 주의");
+  if (propagandaRisk >= 0.75) warnings.push("감정적·일방적 표현이 강함 — 사실과 별개로 판단을 흔들 수 있음");
   if (sourceReliability < 0.3) warnings.push("출처 신뢰도 낮음/최초 유포 불명확");
   if (situationChanged) warnings.push("시점에 따라 사실/여론이 달라짐 — 최신 기준 재평가 필요");
   else if (timeSensitive) warnings.push("시점 의존 주장 — 최신 상황에 따라 결과가 바뀔 수 있음");

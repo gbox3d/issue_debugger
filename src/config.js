@@ -18,7 +18,7 @@ loadEnvFile();
 
 export const config = {
   port: Number(process.env.PORT ?? 8080),
-  version: "0.8.0",
+  version: "0.8.1",
 
   // 활성 LLM provider 선택 (openai | anthropic)
   llm: {
