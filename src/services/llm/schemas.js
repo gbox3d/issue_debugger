@@ -24,6 +24,12 @@ export function assertAgentBShape(obj) {
   if (!Array.isArray(obj.reasoning_bullets)) obj.reasoning_bullets = [];
   if (!Array.isArray(obj.missing_info)) obj.missing_info = [];
   if (typeof obj.confidence !== "number") obj.confidence = 0;
+  // temporal (시간 개념)
+  if (typeof obj.time_sensitive !== "boolean") obj.time_sensitive = false;
+  if (typeof obj.situation_changed !== "boolean") obj.situation_changed = false;
+  if (typeof obj.temporal_note !== "string") obj.temporal_note = "";
+  if (typeof obj.as_of !== "string") obj.as_of = null;
+  if (!Array.isArray(obj.sentiment_timeline)) obj.sentiment_timeline = [];
   return obj;
 }
 

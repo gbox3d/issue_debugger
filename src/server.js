@@ -2,7 +2,7 @@ import express from "express";
 import { config } from "./config.js";
 import { verifyRouter } from "./routes/verify.js";
 import { logInfo } from "./utils/logger.js";
-import { getOllamaInfo as getLlmInfo } from "./services/llm/ollamaClient.js";
+import { getLlmInfo } from "./services/llm/index.js";
 
 const app = express();
 

@@ -3,3 +3,5 @@ temp/
 src/services/rag/*_db.json
 dist/
 .env
+docs/raw
+docs/output

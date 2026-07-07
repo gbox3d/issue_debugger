@@ -26,6 +26,33 @@ export default function ClaimCard({ result }) {
       {/* Claim text */}
       <p className="claim-text">{claim?.claim_text}</p>
 
+      {/* Temporal (시간 개념) — 시점 의존 주장일 때만 표시 */}
+      {agg?.temporal?.time_sensitive && (
+        <div className={`temporal-banner ${agg.temporal.situation_changed ? "temporal-changed" : ""}`}>
+          <div className="temporal-head">
+            <span className="temporal-badge">
+              ⏱ {agg.temporal.situation_changed ? "상황 변화 감지" : "시점 의존 주장"}
+            </span>
+            {agg.temporal.as_of && (
+              <span className="temporal-asof">
+                기준 {new Date(agg.temporal.as_of).toLocaleDateString("ko-KR")}
+              </span>
+            )}
+          </div>
+          {agg.temporal.note && <p className="temporal-note">{agg.temporal.note}</p>}
+          {agg.temporal.sentiment_timeline?.length > 0 && (
+            <ol className="sentiment-timeline">
+              {agg.temporal.sentiment_timeline.map((s, i) => (
+                <li key={i} className={`senti senti-${s.sentiment || "neutral"}`}>
+                  <span className="senti-period">{s.period}</span>
+                  <span className="senti-basis">{s.basis}</span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      )}
+
       {/* Score breakdown */}
       <div className="score-grid">
         <ScoreBar label="사실 근거" value={agg?.score_breakdown?.fact_confidence} />
@@ -101,6 +128,9 @@ export default function ClaimCard({ result }) {
           <ul className="citations-list">
             {agg.citations.map((c, i) => (
               <li key={i}>
+                {c.published_at && (
+                  <span className="cite-date">{new Date(c.published_at).toLocaleDateString("ko-KR")}</span>
+                )}{" "}
                 {c.url ? (
                   <a href={c.url} target="_blank" rel="noopener noreferrer">{c.url}</a>
                 ) : (

@@ -5,8 +5,14 @@ export function renderReport({ claim, agentA, agentB, agentC, agg }) {
     claim: claim.claim_text,
     verdict: agg.final_verdict,
     confidence: agg.final_confidence,
+    temporal: agg.temporal,
     why: {
       fact: { verdict: agentB.verdict, confidence: agentB.confidence, bullets: agentB.reasoning_bullets },
+      temporal: {
+        as_of: agentB.as_of ?? null,
+        time_sensitive: Boolean(agentB.time_sensitive),
+        note: agentB.temporal_note || ""
+      },
       origin: { confidence: agentA.confidence, origin_candidates: agentA.origin_candidates?.slice(0, 3) ?? [] },
       intent: {
         propaganda_score: agentC.propaganda_score,

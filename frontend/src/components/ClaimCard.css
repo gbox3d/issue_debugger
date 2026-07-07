@@ -161,3 +161,70 @@
 .citations-list {
   word-break: break-all;
 }
+
+/* Temporal (시간 개념) */
+.temporal-banner {
+  margin: 10px 0 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--yellow);
+  border-radius: 8px;
+  background: rgba(255, 217, 61, 0.06);
+}
+.temporal-banner.temporal-changed {
+  border-left-color: var(--orange, #ff9f43);
+  background: rgba(255, 159, 67, 0.1);
+}
+.temporal-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.temporal-badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--yellow);
+}
+.temporal-changed .temporal-badge { color: var(--orange, #ff9f43); }
+.temporal-asof {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+.temporal-note {
+  margin: 6px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+.cite-date {
+  display: inline-block;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  min-width: 74px;
+}
+
+/* Sentiment timeline (여론 시계열) */
+.sentiment-timeline {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sentiment-timeline .senti {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 0.8rem;
+  padding-left: 10px;
+  border-left: 3px solid var(--border);
+}
+.senti-period { color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.senti-basis { color: var(--text); line-height: 1.45; }
+.senti-positive { border-left-color: var(--green); }
+.senti-negative { border-left-color: var(--red); }
+.senti-mixed { border-left-color: var(--yellow); }
+.senti-neutral { border-left-color: var(--text-dim); }
