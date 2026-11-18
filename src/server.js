@@ -1,6 +1,7 @@
 import express from "express";
 import { config } from "./config.js";
 import { verifyRouter } from "./routes/verify.js";
+import { personnelRouter } from "./routes/personnel.js";
 import { logInfo } from "./utils/logger.js";
 import { getLlmInfo } from "./services/llm/index.js";
 
@@ -32,7 +33,8 @@ app.get("/version", async (req, res) => {
 
 app.get("/health", (req, res) => res.json({ ok: true }));
 app.use("/api", verifyRouter);
+app.use("/api", personnelRouter);
 
-app.listen(config.port, () => {
-  logInfo(`Marbas server listening on http://localhost:${config.port}`);
+app.listen(config.port, config.host, () => {
+  logInfo(`Marbas server listening on http://${config.host}:${config.port}`);
 });

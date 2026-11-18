@@ -62,3 +62,12 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+.verify-field { display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.88rem; min-width: 0; }
+.verify-field small, .verify-help { color: var(--text-dim); font-size: 0.8rem; }
+.verify-time-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-top: 0.4rem; }
+.verify-time-fields input, .verify-time-fields select, .verify-field input[type="datetime-local"] { color-scheme: dark; min-width: 0; }
+.verify-sources { border: 1px solid var(--border); border-radius: 8px; padding: 0.8rem; }
+.verify-sources summary { color: var(--text-dim); font-size: 0.88rem; cursor: pointer; }
+.verify-sources .verify-field { margin-top: 0.75rem; }
+@media (max-width: 550px) { .verify-time-fields { grid-template-columns: 1fr; } }

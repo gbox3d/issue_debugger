@@ -1,0 +1,183 @@
+{
+  "schema": "article-search-validation-v1",
+  "date": "2026-11-15",
+  "goal_status": "achieved",
+  "production": true,
+  "versions": {
+    "backend": "0.8.6",
+    "frontend": "0.1.5",
+    "rule": "general-news-v3"
+  },
+  "review": {
+    "reviewer": "delivery_review",
+    "formal_rounds_used": 2,
+    "formal_round_limit": 3,
+    "third_round_unused": true,
+    "history": [
+      {
+        "round": 1,
+        "score": 6.8,
+        "result": "fail",
+        "reason": "unsafe_hold_summary",
+        "corrected": true
+      },
+      {
+        "round": 2,
+        "predeployment_score": 8.3,
+        "final_score": 8.4,
+        "result": "pass",
+        "production_confirmed": true
+      }
+    ],
+    "root_work_scores": {
+      "news": 8.6,
+      "ui": 8.5,
+      "integration": 8.5
+    },
+    "resource_scores": {
+      "cache": 8.4,
+      "execution_policy": 8.2,
+      "usage_metrics": 8.5
+    },
+    "improvements_used": {
+      "news": 3,
+      "ui": 2,
+      "integration": 3,
+      "cache": 2,
+      "execution_policy": 0,
+      "usage_metrics": 0
+    },
+    "improvement_limit_per_item": 5,
+    "historical_pauses_before_current_goal": 2
+  },
+  "automated_tests": {
+    "total": 128,
+    "passed": 128,
+    "failed": 0
+  },
+  "reports": [
+    {
+      "input_mode": "keyword",
+      "report_id": "7e4054f8-eab7-4d85-b31e-ee218625a2cf",
+      "http_status": 200,
+      "replay_exact": true,
+      "input_contract": {
+        "has_text": true,
+        "has_article_url": false,
+        "explicit_source_urls_count": 0
+      },
+      "usable_originals": 6,
+      "counter_search_complete": false,
+      "status": "hold",
+      "coverage": {
+        "extracted": 1,
+        "attempted": 1,
+        "searched": 1,
+        "reviewed": 1,
+        "decided": 0
+      },
+      "verdict_counts": {
+        "true": 0,
+        "false": 0,
+        "hold": 1
+      },
+      "usage": {
+        "call_count": 3,
+        "success_count": 3,
+        "failure_count": 0,
+        "skipped_call_count": 2,
+        "verified_cache_hits": 0,
+        "duration_ms": 57599,
+        "token_totals": {
+          "input_tokens": 47083,
+          "output_tokens": 9763,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        }
+      }
+    },
+    {
+      "input_mode": "article",
+      "report_id": "732b4388-c814-425a-b11c-42674ec1bd31",
+      "http_status": 200,
+      "replay_exact": true,
+      "input_contract": {
+        "has_text": false,
+        "has_article_url": true,
+        "explicit_source_urls_count": 0
+      },
+      "usable_originals": 6,
+      "counter_search_complete": true,
+      "status": "assessed",
+      "coverage": {
+        "extracted": 8,
+        "attempted": 3,
+        "searched": 3,
+        "reviewed": 3,
+        "decided": 3
+      },
+      "verdict_counts": {
+        "true": 3,
+        "false": 0,
+        "hold": 0
+      },
+      "usage": {
+        "call_count": 7,
+        "success_count": 7,
+        "failure_count": 0,
+        "skipped_call_count": 6,
+        "verified_cache_hits": 0,
+        "duration_ms": 67156,
+        "token_totals": {
+          "input_tokens": 84812,
+          "output_tokens": 22471,
+          "cache_read_input_tokens": 0,
+          "cache_creation_input_tokens": 0
+        }
+      }
+    }
+  ],
+  "production_checks": {
+    "public_health_http_status": 200,
+    "config_api_path": "/marbas",
+    "browser_without_interception": true,
+    "viewport_widths": [
+      1365,
+      390
+    ],
+    "horizontal_overflow": false,
+    "javascript_errors": 0,
+    "report_citation_counts": [
+      4,
+      9
+    ],
+    "validated_citations": 13,
+    "total_citations": 13,
+    "validated_finding_quotes": 19,
+    "total_finding_quotes": 19,
+    "source_roles_visible": true,
+    "source_hashes_checked": true,
+    "original_input_preserved": true,
+    "temporary_api_31319_stopped": true,
+    "temporary_vite_5179_stopped": true,
+    "production_pm2_running": true
+  },
+  "limitations": {
+    "article_extracted": 8,
+    "article_reviewed": 3,
+    "article_unreviewed": 5,
+    "observed_seconds_rounded_range": [
+      58,
+      67
+    ],
+    "keyword_counter_incomplete_remains_hold": true,
+    "global_accuracy_proven": false,
+    "global_cache_hit_rate_proven": false
+  },
+  "privacy": {
+    "full_production_reports_copied": false,
+    "claim_text_included": false,
+    "individual_names_included": false,
+    "source_allegations_included": false
+  }
+}

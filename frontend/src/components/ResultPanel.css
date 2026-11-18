@@ -25,3 +25,38 @@
   color: var(--text-dim);
   padding: 2rem;
 }
+
+.result-time { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; padding: 1rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; }
+.result-time dt { color: var(--text-dim); font-size: 0.75rem; }
+.result-time dd { font-size: 0.88rem; }
+.result-note, .result-record-id { color: var(--text-dim); font-size: 0.78rem; overflow-wrap: anywhere; }
+@media (max-width: 550px) { .result-time { grid-template-columns: 1fr; } }
+
+.result-overview { border-left: 3px solid var(--accent); padding: 0.5rem 0 0.5rem 1rem; }
+.result-overview-incomplete { border-left-color: var(--yellow); }
+.result-eyebrow { font-size: 0.74rem; color: var(--text-dim); margin-bottom: 0.35rem; }
+.result-overview .result-count { margin-top: 0.55rem; }
+.result-next-action { font-size: 0.88rem; line-height: 1.65; margin-top: 0.55rem; }
+.result-details { border-top: 1px solid var(--border); padding-top: 0.7rem; }
+.result-details summary { font-size: 0.85rem; color: var(--text-dim); cursor: pointer; }
+.result-details > .result-time, .result-details > .result-note, .result-details > .claim-warnings, .result-details > .result-record-id { margin-top: 0.8rem; }
+.result-details summary:focus-visible, .claim-details summary:focus-visible, .finding-links a:focus-visible, .retrieval-list a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.retrieval-summary { border: 1px solid var(--border); border-radius: 10px; padding: 1rem; }
+.retrieval-summary h3 { font-size: 0.95rem; }
+.retrieval-counts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.7rem; margin: 1rem 0; }
+.retrieval-counts dt { color: var(--text-dim); font-size: 0.75rem; }
+.retrieval-counts dt small { display: block; font-size: 0.65rem; }
+.retrieval-counts dd { font-size: 1.1rem; margin-top: 0.3rem; }
+.retrieval-failure-note { color: var(--text-dim); font-size: 0.8rem; margin-bottom: 0.8rem; }
+.retrieval-list { list-style: none; margin: 0.8rem 0; padding: 0; display: grid; gap: 0.7rem; }
+.retrieval-list li { display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem; padding-bottom: 0.7rem; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+.retrieval-list strong, .retrieval-list a { font-size: 0.85rem; font-weight: 500; }
+.retrieval-list a { color: var(--accent); }
+.retrieval-list small, .retrieval-list p { color: var(--text-dim); font-size: 0.75rem; }
+.retrieval-state { font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 4px; background: var(--bg-input); color: var(--text-dim); }
+@media (max-width: 420px) { .retrieval-counts { gap: 0.4rem; } .retrieval-counts dt { font-size: 0.7rem; } .result-title { font-size: 1.1rem; } }
+
+.resource-usage-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; margin: 0.8rem 0; }
+.resource-usage-grid dt { color: var(--text-dim); font-size: 0.73rem; }
+.resource-usage-grid dd { font-size: 0.82rem; overflow-wrap: anywhere; }
+@media (max-width: 420px) { .resource-usage-grid { grid-template-columns: 1fr; } }

@@ -1,6 +1,7 @@
 import { config } from "../../config.js";
 import { safeJsonParse, extractFirstJsonObject, isJsonObject } from "../../utils/json.js";
 import { logWarn } from "../../utils/logger.js";
+import { trackLlmCall } from "./usageMetrics.js";
 
 /**
  * OpenAI Chat Completions adapter — JSON 출력 강제.
@@ -16,45 +17,48 @@ export const openaiAdapter = {
   cost_per_1k: { input: 0.00075, output: 0.0045 },
 
   async chatJson({ messages, schemaName, temperature = 0.2 }) {
-    const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), config.openai.timeoutMs);
+    return trackLlmCall({ provider: "openai", model: config.openai.model, stage: schemaName }, async captureUsage => {
+      const controller = new AbortController();
+      const t = setTimeout(() => controller.abort(), config.openai.timeoutMs);
 
-    try {
-      const resp = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${config.openai.apiKey}`,
-        },
-        signal: controller.signal,
-        body: JSON.stringify({
-          model: config.openai.model,
-          messages,
-          temperature,
-          response_format: { type: "json_object" },
-        }),
-      });
+      try {
+        const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${config.openai.apiKey}`,
+          },
+          signal: controller.signal,
+          body: JSON.stringify({
+            model: config.openai.model,
+            messages,
+            temperature,
+            response_format: { type: "json_object" },
+          }),
+        });
 
-      if (!resp.ok) {
-        const body = await resp.text().catch(() => "");
-        throw new Error(`OpenAI error: ${resp.status} ${resp.statusText} ${body}`);
+        if (!resp.ok) {
+          const body = await resp.text().catch(() => "");
+          throw new Error(`OpenAI error: ${resp.status} ${resp.statusText} ${body}`);
+        }
+
+        const data = await resp.json();
+        captureUsage(data?.usage, data?.model);
+        const content = data?.choices?.[0]?.message?.content ?? "";
+
+        const direct = safeJsonParse(content);
+        if (direct.ok && isJsonObject(direct.value)) return direct.value;
+
+        const extracted = extractFirstJsonObject(content);
+        const parsed = safeJsonParse(extracted);
+        if (parsed.ok && isJsonObject(parsed.value)) return parsed.value;
+
+        logWarn(`[${schemaName}] OpenAI returned non-JSON. Raw=${content.slice(0, 400)}...`);
+        throw new Error(`[${schemaName}] OpenAI returned non-JSON output`);
+      } finally {
+        clearTimeout(t);
       }
-
-      const data = await resp.json();
-      const content = data?.choices?.[0]?.message?.content ?? "";
-
-      const direct = safeJsonParse(content);
-      if (direct.ok && isJsonObject(direct.value)) return direct.value;
-
-      const extracted = extractFirstJsonObject(content);
-      const parsed = safeJsonParse(extracted);
-      if (parsed.ok && isJsonObject(parsed.value)) return parsed.value;
-
-      logWarn(`[${schemaName}] OpenAI returned non-JSON. Raw=${content.slice(0, 400)}...`);
-      throw new Error(`[${schemaName}] OpenAI returned non-JSON output`);
-    } finally {
-      clearTimeout(t);
-    }
+    });
   },
 
   async health() {

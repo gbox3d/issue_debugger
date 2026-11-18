@@ -22,12 +22,12 @@ async function getApiBase() {
   return port ? `${host}:${port}` : host;
 }
 
-export async function verifyText({ text, url, collected_at }) {
+export async function verifyText(request) {
   const apiBase = await getApiBase();
   const resp = await fetch(`${apiBase}/api/verify`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text, url: url || undefined, collected_at: collected_at || undefined }),
+    body: JSON.stringify(request),
   });
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({ error: resp.statusText }));
@@ -36,9 +36,43 @@ export async function verifyText({ text, url, collected_at }) {
   return resp.json();
 }
 
+export async function fetchReport(id) {
+  const apiBase = await getApiBase();
+  const resp = await fetch(`${apiBase}/api/reports/${encodeURIComponent(id)}`);
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ error: resp.statusText }));
+    throw new Error(err.error || "검증 기록을 불러오지 못했습니다.");
+  }
+  return resp.json();
+}
+
 export async function fetchVersion() {
   const apiBase = await getApiBase();
   const resp = await fetch(`${apiBase}/version`);
   if (!resp.ok) throw new Error("서버 연결 실패");
+  return resp.json();
+}
+
+export async function verifyPersonnel(request) {
+  const apiBase = await getApiBase();
+  const resp = await fetch(`${apiBase}/api/personnel/verify`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(request),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ error: resp.statusText }));
+    throw new Error(err.error || "인사 시점 검증에 실패했습니다.");
+  }
+  return resp.json();
+}
+
+export async function fetchPersonnelReport(id) {
+  const apiBase = await getApiBase();
+  const resp = await fetch(`${apiBase}/api/personnel/reports/${encodeURIComponent(id)}`);
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ error: resp.statusText }));
+    throw new Error(err.error || "저장된 검증 기록을 불러오지 못했습니다.");
+  }
   return resp.json();
 }

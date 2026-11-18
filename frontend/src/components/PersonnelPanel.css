@@ -1,0 +1,59 @@
+.verification-tabs { display: flex; gap: 0.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; }
+.verification-tabs button, .personnel-panel button { font: inherit; cursor: pointer; }
+.verification-tabs button { padding: 0.65rem 1rem; border: 1px solid var(--border); border-radius: 8px; color: var(--text-dim); background: transparent; }
+.verification-tabs button[aria-selected="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+.general-verification-pane:not([hidden]) { display: flex; flex-direction: column; gap: 1.5rem; }
+.personnel-panel { display: flex; flex-direction: column; gap: 1.25rem; }
+.personnel-intro h2 { font-size: 1.5rem; margin: 0.3rem 0 0.5rem; }
+.personnel-intro p, .personnel-history > p { color: var(--text-dim); font-size: 0.92rem; }
+.personnel-intro .personnel-eyebrow { color: var(--green); font-size: 0.8rem; letter-spacing: 0.04em; }
+.personnel-form, .personnel-report, .personnel-history { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.4rem; }
+.personnel-form { display: flex; flex-direction: column; gap: 1.25rem; }
+.personnel-form fieldset { border: 0; min-width: 0; display: flex; flex-direction: column; gap: 0.85rem; }
+.personnel-form legend { font-size: 1rem; font-weight: 600; padding-bottom: 0.7rem; }
+.personnel-choices { display: flex; gap: 1.2rem; flex-wrap: wrap; font-size: 0.9rem; }
+.personnel-choices label { display: inline-flex; align-items: center; gap: 0.4rem; }
+.personnel-form input[type="radio"] { accent-color: var(--accent); }
+.personnel-field { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.88rem; }
+.personnel-field input, .personnel-field textarea { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 0.65rem 0.8rem; color: var(--text); background: var(--bg-input); font: inherit; color-scheme: dark; }
+.personnel-field textarea { resize: vertical; }
+.personnel-panel small { color: var(--text-dim); font-size: 0.8rem; }
+.personnel-mode { display: flex; align-items: flex-start; gap: 0.65rem; background: var(--bg-input); padding: 0.8rem; border-radius: 8px; }
+.personnel-mode > input { margin-top: 0.3rem; }
+.personnel-mode strong { font-size: 0.9rem; }
+.personnel-mode small { display: block; margin-top: 0.2rem; }
+.personnel-examples, .personnel-report-actions, .personnel-history > div { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.personnel-examples > span { font-size: 0.8rem; color: var(--text-dim); }
+.personnel-examples button, .personnel-report-actions button, .personnel-history button { color: var(--text); border: 1px solid var(--border); background: var(--bg-input); padding: 0.4rem 0.65rem; border-radius: 6px; font-size: 0.8rem; }
+.personnel-submit { align-self: flex-end; border: 0; border-radius: 8px; padding: 0.7rem 1.4rem; background: var(--accent); color: #fff; font-weight: 600 !important; }
+.personnel-panel button:disabled { cursor: not-allowed; opacity: 0.45; }
+.personnel-panel button:hover:not(:disabled) { border-color: var(--accent); }
+.personnel-panel :focus-visible, .verification-tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.personnel-notice { color: var(--text-dim); font-size: 0.88rem; }
+.personnel-report { display: flex; flex-direction: column; gap: 1rem; }
+.personnel-report-header { display: flex; align-items: center; flex-wrap: wrap; gap: 0.7rem; }
+.personnel-report-header h3 { font-size: 1.05rem; }
+.personnel-verdict { font-weight: 700; font-size: 0.86rem; padding: 0.15rem 0.7rem; border: 1px solid currentColor; border-radius: 5px; color: var(--yellow); }
+.personnel-true .personnel-verdict { color: var(--green); }
+.personnel-false .personnel-verdict { color: var(--red); }
+.personnel-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; }
+.personnel-facts dt { color: var(--text-dim); font-size: 0.75rem; }
+.personnel-facts dd { font-size: 0.9rem; }
+.personnel-warnings { padding-left: 1.1rem; color: var(--yellow); font-size: 0.85rem; }
+.personnel-evidence { display: flex; flex-direction: column; gap: 0.75rem; }
+.personnel-evidence h4 { font-size: 0.9rem; }
+.personnel-evidence-card { background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; font-size: 0.85rem; overflow-wrap: anywhere; }
+.personnel-evidence-card blockquote { border-left: 3px solid var(--accent); padding-left: 0.75rem; margin-bottom: 0.6rem; }
+.personnel-evidence-card a { color: #b5aaff; }
+.personnel-evidence-card details { margin-top: 0.65rem; color: var(--text-dim); font-size: 0.75rem; }
+.personnel-evidence-card summary { cursor: pointer; }
+.personnel-meta { color: var(--text-dim); font-size: 0.75rem; overflow-wrap: anywhere; }
+.personnel-history h3 { font-size: 0.95rem; }
+.personnel-history > p { font-size: 0.8rem; margin: 0.35rem 0 0.8rem; }
+.personnel-history button[aria-pressed="true"] { border-color: var(--accent); }
+@media (max-width: 550px) {
+  .personnel-form, .personnel-report, .personnel-history { padding: 1rem; }
+  .personnel-facts { grid-template-columns: 1fr; }
+  .verification-tabs button { flex: 1; font-size: 0.9rem; padding: 0.65rem 0.5rem; }
+  .personnel-submit { width: 100%; }
+}

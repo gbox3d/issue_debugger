@@ -1,0 +1,59 @@
+{
+  "recorded_date": "2026-11-18",
+  "timezone": "Asia/Seoul",
+  "scope": "local regression and documentation review; no fresh live-provider or production validation",
+  "environment": {
+    "node": "v24.22.3",
+    "npm": "11.19.1",
+    "backend_version": "0.8.6",
+    "frontend_version": "0.1.5"
+  },
+  "tests": {
+    "command": "npm test",
+    "cwd": "repository root",
+    "exit_code": 0,
+    "tests": 128,
+    "passed": 128,
+    "failed": 0,
+    "skipped": 0,
+    "duration_ms": 16094.04425,
+    "log_path": "/tmp/marbas-commit-tests-20261118.log",
+    "log_sha256": "67bd3eb3e40def162ca47fb4cc11d039bdc7f83fd50b443ca7b30dd3a94d3f66",
+    "type": "local tests including mocks; not real-world model accuracy"
+  },
+  "frontend_build": {
+    "command": "npm run build -- --outDir /tmp/marbas-commit-build-20261118",
+    "cwd": "frontend",
+    "exit_code": 0,
+    "vite_version": "6.4.1",
+    "duration_seconds": 2.49,
+    "output_directory": "/tmp/marbas-commit-build-20261118",
+    "log_path": "/tmp/marbas-commit-build-20261118.log",
+    "log_sha256": "6f508ffa4df3872631d911549acf64a5c56acbcf51b434ab8a3babad8ef12f63",
+    "assets": [
+      "assets/index-fPi9orW3.js",
+      "assets/index-Dt3NhoSv.css"
+    ],
+    "production_dist_modified": false
+  },
+  "limits": [
+    "No production restart or deployment in this documentation task.",
+    "No new paid LLM or search-provider validation.",
+    "Historical live evidence is dated 2026-11-15.",
+    "Temporary log paths are local provenance, not required clone inputs."
+  ],
+  "documentation_checks": {
+    "status": "passed",
+    "documents": 14,
+    "local_links": 243,
+    "issues": 0,
+    "checks": [
+      "local Markdown paths and heading anchors",
+      "fresh-clone link targets not ignored",
+      "immediate _forAI TOCs",
+      "validation JSON syntax",
+      "git diff --check"
+    ],
+    "scope": "repository-local checks; not external link or current market/legal verification"
+  }
+}

@@ -3,8 +3,8 @@ import { logWarn } from "../../utils/logger.js";
 
 /**
  * 네이버 검색 API — 뉴스 검색.
- * 한국어 native + 항목마다 pubDate(발행일) 포함 + sort=date(최신순) 라, 시점 의존 주장(이슈)에 최적.
- * 반환 형태는 Tavily searchWeb 과 동일: [{ title, url, published_at, snippet, score }]
+ * 관련도 정렬을 사용하며 검색 장애와 검색 결과 없음을 구분한다.
+ * 기존 배열 반환 함수는 detailed 결과의 results만 반환하는 호환 래퍼다.
  */
 
 export function hasNaver() {
@@ -30,20 +30,21 @@ function toIso(pubDate) {
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
 }
 
-export async function searchNaverNews({ query, count }) {
+export async function searchNaverNewsDetailed({ query, count, request = fetch }) {
+  const provider = "naver";
+  if (typeof query !== "string" || !query.trim() || query.length > 160) return { provider, status: "error", error_code: "invalid_query", results: [] };
   if (!hasNaver()) {
-    logWarn("[naver] client id/secret missing, skipping");
-    return [];
+    return { provider, status: "disabled", error_code: "not_configured", results: [] };
   }
 
   const controller = new AbortController();
   const t = setTimeout(() => controller.abort(), config.web.timeoutMs);
 
   try {
-    const display = Math.min(100, Math.max(1, count ?? config.naver.maxResults));
-    const url = `https://openapi.naver.com/v1/search/news.json?query=${encodeURIComponent(query)}&display=${display}&sort=date`;
+    const display = Math.min(100, Math.max(1, Number.isFinite(count) ? count : config.naver.maxResults));
+    const url = `https://openapi.naver.com/v1/search/news.json?query=${encodeURIComponent(query.trim())}&display=${display}&sort=sim`;
 
-    const resp = await fetch(url, {
+    const resp = await request(url, {
       headers: {
         "X-Naver-Client-Id": config.naver.clientId,
         "X-Naver-Client-Secret": config.naver.clientSecret
@@ -52,26 +53,31 @@ export async function searchNaverNews({ query, count }) {
     });
 
     if (!resp.ok) {
-      const body = await resp.text().catch(() => "");
-      logWarn(`[naver] error: ${resp.status} ${resp.statusText} ${body}`);
-      return [];
+      logWarn(`[naver] HTTP ${resp.status}`);
+      return { provider, status: "error", error_code: `http_${resp.status}`, results: [] };
     }
 
     const data = await resp.json();
-    const items = Array.isArray(data?.items) ? data.items : [];
+    if (!Array.isArray(data?.items)) return { provider, status: "error", error_code: "invalid_response", results: [] };
+    const items = data.items;
 
-    // sort=date 라 이미 최신순. 형태만 정규화.
-    return items.map((it) => ({
+    const results = items.map((it) => ({
       title: stripHtml(it.title),
       url: it.originallink || it.link || "",
       published_at: toIso(it.pubDate),
       snippet: stripHtml(it.description).slice(0, 400),
-      score: null
+      score: null, provider
     }));
+    return { provider, status: results.length ? "ok" : "no_results", results };
   } catch (e) {
-    logWarn(`[naver] request failed: ${String(e?.message ?? e)}`);
-    return [];
+    const error_code = e?.name === "AbortError" ? "timeout" : e instanceof SyntaxError ? "invalid_response" : "network_error";
+    logWarn(`[naver] ${error_code}`);
+    return { provider, status: "error", error_code, results: [] };
   } finally {
     clearTimeout(t);
   }
+}
+
+export async function searchNaverNews(options) {
+  return (await searchNaverNewsDetailed(options)).results;
 }

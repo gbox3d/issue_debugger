@@ -12,6 +12,7 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .verdict-badge {
@@ -228,3 +229,52 @@
 .senti-negative { border-left-color: var(--red); }
 .senti-mixed { border-left-color: var(--yellow); }
 .senti-neutral { border-left-color: var(--text-dim); }
+
+.claim-summary, .claim-review-note { font-size: 0.85rem; color: var(--text-dim); }
+.claim-review-note { margin-top: 0.5rem; }
+.citations-list li { padding: 0.75rem 0; border-bottom: 1px solid var(--border); word-break: normal; overflow-wrap: anywhere; }
+.citations-list li:last-child { border-bottom: 0; }
+.citation-quote, .citation-time blockquote { border-left: 3px solid var(--accent); padding: 0.3rem 0.75rem; margin: 0.3rem 0 0.6rem; white-space: pre-wrap; }
+.citation-dates { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin: 0.7rem 0; }
+.citation-dates dt, .citation-time > span { font-size: 0.73rem; color: var(--text-dim); }
+.citation-dates dd, .citation-time blockquote, .citation-reason { font-size: 0.8rem; }
+.citation-limitation { color: var(--yellow); font-size: 0.78rem; margin-top: 0.45rem; }
+.citation-identifiers { color: var(--text-dim); font-size: 0.72rem; margin-top: 0.5rem; }
+.citation-identifiers summary { font-size: 0.75rem; }
+@media (max-width: 550px) { .citation-dates { grid-template-columns: 1fr; } }
+
+.claim-basis { font-size: 0.75rem; color: var(--text-dim); }
+.claim-target { border-left: 2px solid var(--border); padding-left: 0.8rem; }
+.claim-target-label { font-size: 0.7rem; color: var(--text-dim); margin-bottom: 0.3rem; }
+.claim-target blockquote { margin: 0; }
+.claim-answer { font-size: 0.98rem; line-height: 1.7; }
+.claim-next-action, .claim-scope-note { font-size: 0.83rem; line-height: 1.65; }
+.claim-scope-note { color: var(--text-dim); }
+.claim-findings { list-style: none; display: grid; gap: 0.7rem; padding: 0; }
+.claim-findings li { padding: 0.8rem; background: var(--bg-input); border-radius: 7px; }
+.finding-kind { display: block; font-size: 0.72rem; color: var(--accent); margin-bottom: 0.35rem; }
+.finding-unresolved { color: var(--yellow); }
+.claim-findings p { font-size: 0.9rem; line-height: 1.6; }
+.claim-findings small { color: var(--text-dim); font-size: 0.73rem; }
+.finding-links { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.5rem; }
+.finding-links a { color: var(--accent); font-size: 0.76rem; }
+.claim-evidence { border-top: 1px solid var(--border); padding-top: 0.8rem; }
+.claim-evidence h3 { font-size: 0.9rem; }
+.claim-evidence h3 span { color: var(--text-dim); font-weight: 400; }
+.claim-evidence .citations-list { list-style: none; padding: 0; }
+.citation-heading { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.6rem; }
+.citation-number { flex-shrink: 0; color: var(--text-dim); font-size: 0.7rem; }
+.citation-heading a { color: var(--accent); font-size: 0.85rem; }
+.claim-evidence .citation-quote { font-size: 0.86rem; line-height: 1.65; }
+.citation-inline-time { color: var(--text-dim); font-size: 0.72rem; line-height: 1.6; }
+.citation-time-details { margin-top: 0.5rem; border-top: 0; padding-top: 0; }
+.citation-time-details summary { font-size: 0.76rem; }
+.claim-review { color: var(--text-dim); font-size: 0.82rem; margin: 0.6rem 0; }
+.claim-details > .score-grid { margin-top: 0.7rem; }
+.claim-card, .claim-findings li, .claim-evidence { min-width: 0; overflow-wrap: anywhere; }
+.citations-list li[id] { scroll-margin-top: 1.5rem; }
+@media (max-width: 550px) { .claim-card { padding: 1rem; } .citation-heading { flex-direction: column; gap: 0.2rem; } }
+
+.finding-quote { margin-top: 0.5rem; }
+.finding-quote summary { color: var(--text-dim); font-size: 0.73rem; cursor: pointer; }
+.finding-quote blockquote { font-size: 0.82rem; line-height: 1.6; border-left: 2px solid var(--accent); margin: 0.45rem 0; padding-left: 0.7rem; white-space: pre-wrap; }

@@ -39,3 +39,22 @@
   font-variant-numeric: tabular-nums;
   pointer-events: none;
 }
+
+@media (max-width: 600px) {
+  .version-badge {
+    position: static;
+    align-self: flex-start;
+  }
+}
+
+.verification-intro h2 { font-size: 1.4rem; margin-bottom: 0.4rem; }
+.verification-intro p, .verification-note { color: var(--text-dim); font-size: 0.9rem; }
+.verification-note { margin-bottom: 0.7rem; }
+.verification-report-actions, .verification-history > div { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.verification-report-actions button, .verification-history button { font: inherit; font-size: 0.82rem; color: var(--text); border: 1px solid var(--border); border-radius: 6px; background: var(--bg-input); padding: 0.5rem 0.8rem; cursor: pointer; }
+.verification-report-actions button:disabled, .verification-history button:disabled { opacity: 0.4; cursor: not-allowed; }
+.verification-history { padding: 1rem; border: 1px solid var(--border); border-radius: 8px; }
+.verification-history h3 { font-size: 0.95rem; }
+.verification-history p { color: var(--text-dim); font-size: 0.8rem; margin: 0.4rem 0 0.8rem; }
+.verification-history button[aria-pressed="true"] { border-color: var(--accent); }
+.verification-report-actions button:focus-visible, .verification-history button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }

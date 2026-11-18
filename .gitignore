@@ -5,3 +5,9 @@ dist/
 .env
 docs/raw
 docs/output
+
+_temp/
+data/personnel/
+data/verification/
+
+localfiles/

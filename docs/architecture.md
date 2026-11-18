@@ -3,11 +3,13 @@
 > 작성일: 2026-04-28
 > 대상: 내부 기술 설계 문서 (수요조사서 [ref.md](./ref.md) 의 구현 방안 ①~⑤를 시스템 설계로 구체화)
 > 코드명: Marbas — 한국어 이슈 검증 / 팩트체크 시스템
+> 2026-11-18 구분: 아래 1~14절은 2026-04-28 장기 목표 설계와 후속 검토 메모다. 제안 API·모델 후보·배포도는 현재 구현 계약이 아니다. 현재 계약은 [README](../readme.md), 단계별 관측은 [문서 안내](./README.md)를 따른다.
 
 ---
 
 ## 목차
 
+- [현재 구현 요약](#현재-구현-요약)
 - [1. 설계 원칙](#1-설계-원칙)
 - [2. 시스템 아키텍처 (전체 구성)](#2-시스템-아키텍처-전체-구성)
 - [3. 데이터 플로우](#3-데이터-플로우)
@@ -44,14 +46,20 @@
   - [10.2 차별화 KPI](#102-차별화-kpi)
   - [10.3 벤치마크](#103-벤치마크)
 - [11. 배포 아키텍처](#11-배포-아키텍처)
-  - [11.1 현재 (Phase 1)](#111-현재-phase-1)
+  - [11.1 작성 당시 배포 (Phase 1)](#111-작성-당시-배포-phase-1)
   - [11.2 목표 (Phase 5+)](#112-목표-phase-5)
-  - [11.3 인프라 요구사항](#113-인프라-요구사항-student-sllm-운영-기준)
+  - [11.3 인프라 검토 예시](#113-인프라-검토-예시-student-sllm-운영)
 - [12. 단계별 구현 로드맵 (Phase 매핑)](#12-단계별-구현-로드맵-phase-매핑)
 - [13. 리스크와 완화](#13-리스크와-완화)
 - [14. 참고 / 연결 문서](#14-참고--연결-문서)
 
 ---
+
+## 현재 구현 요약
+
+BE 0.8.6 / FE 0.1.5는 일반 입력·기사 본문 → 주장 추출(최대 핵심 3개) → Naver/Tavily 검색과 원문 수집 또는 적격 보관본 선택 → B/D의 분리된 검토 → 원문·시간 인용 검사 → true/false/hold 보고서 저장·조회로 동작한다. B/D는 같은 설정 모델이며 다중 모델 합의가 아니다. A/C는 선택 분석이다. 기본 모델 설정은 Anthropic `claude-opus-5-5`, 실제 어댑터 계약은 `chatJson`이며 아래 `generate` 설계와 구분한다.
+
+`src/services/verification`이 현재 일반 경로를 담당한다. 내부 검색 도구는 서버가 호출하며 자율 MCP/tool_use 루프가 아니다. 로컬 스냅샷·검토 캐시·사용량 집계는 구현됐고, JSON 신뢰 DB는 기존 경로용이다. Student/벡터 검색/인간 검수 큐/사용자 인증은 구현 완료하지 않았다. 자세한 제한과 재현 절차는 README를 따른다.
 
 ## 1. 설계 원칙
 
@@ -366,7 +374,7 @@ flowchart TB
 
 | 단계 | 방식 |
 |---|---|
-| 현재 (Phase 1~2) | JSON 키워드 매칭 ([trustedDb.js](../src/services/rag/trustedDb.js)) |
+| 작성 당시 기존 경로 (Phase 1~2) | JSON 키워드 매칭 ([trustedDb.js](../src/services/rag/trustedDb.js)) |
 | Phase 3+ | 한국어 임베딩(BGE-Korean / KURE / Solar Embedding) + FAISS / pgvector |
 | Phase 5+ | 하이브리드(BM25 + dense) + reranker (한국어 reranker 모델) |
 
@@ -423,7 +431,7 @@ interface LlmAdapter {
 
 | Adapter | 역할 | 사용 시점 |
 |---|---|---|
-| `OpenAIAdapter` | Teacher | Phase 1~ (현재) |
+| `OpenAIAdapter` | Teacher | 작성 당시 Phase 1~ |
 | `AnthropicAdapter` | Teacher (백업/비교) | Phase 1~ |
 | `HyperClovaXAdapter` | Teacher (국산) | Phase 2~ — 데이터 주권 옵션 |
 | `OllamaAdapter` | 로컬 개발/테스트 | 옵션 |
@@ -445,7 +453,7 @@ sequenceDiagram
     participant S as Student sLLM<br/>(EXAONE/Solar + LoRA)
 
     T->>L: teacher_output<br/>(참고용 메타데이터)
-    H->>L: human_label<br/>(정답 / TOS-safe)
+    H->>L: human_label<br/>(검수 라벨 / 권리 확인 별도)
     Note over L: IAA ≥ 0.8 통과분만<br/>use_for_training = true
     L->>S: SFT 학습<br/>(human_label 기반)
     L-->>S: DPO/KTO 선호 학습<br/>(선택)
@@ -476,10 +484,10 @@ sequenceDiagram
 2. **DPO / KTO** (선택): 사람이 선택한 응답 vs Teacher 오답 쌍으로 선호 학습
 3. **RAG 통합 평가**: 학습된 Student가 RAG와 결합 시 성능 측정
 
-**약관(TOS) 회피 핵심**:
+**학습 데이터 품질·권리 관리**:
 - Teacher 출력을 **그대로** 학습 라벨로 쓰지 않음
-- 항상 `human_label`을 정답으로 사용 → 데이터셋 출처는 "전문가·국민 검증 결과"
-- Teacher 출력은 **참고용 메타데이터**로만 보관
+- `human_label`은 검수 결과이며, 원자료·AI 출력의 출처와 생성 과정을 별도로 기록한다. 사람 검수가 계약·저작권 제한을 자동 해소하지 않는다.
+- Teacher 출력은 **참고용 메타데이터**로 구분하고, 모델 제공사 계약·원자료 이용권·목적별 적격성이 확인된 데이터만 학습 대상으로 승인한다. [Anthropic 상용 약관](https://www.anthropic.com/legal/commercial-terms) 등 실제 적용 계약을 확인한다.
 
 ---
 
@@ -618,7 +626,7 @@ sequenceDiagram
 
 ## 11. 배포 아키텍처
 
-### 11.1 현재 (Phase 1)
+### 11.1 작성 당시 배포 (Phase 1)
 
 ```mermaid
 flowchart LR
@@ -685,7 +693,9 @@ flowchart TB
     class S1 student
 ```
 
-### 11.3 인프라 요구사항 (Student sLLM 운영 기준)
+### 11.3 인프라 검토 예시 (Student sLLM 운영)
+
+아래는 과거 검토 구성으로, 보편적인 최소 요구사항이나 실측 학습 시간으로 확정하지 않는다. 모델·정밀도·문맥 길이·배치·작업별 품질과 처리량을 기존/공용/임차 자원에서 확인한 뒤 구매 규모를 정한다.
 
 | 항목 | 요구 |
 |---|---|
@@ -741,7 +751,7 @@ timeline
 
 | 리스크 | 완화 |
 |---|---|
-| 상용 API TOS 위반 | Teacher 출력 직접 학습 금지, **인간 검증 통과분만** 학습 풀 진입 |
+| 상용 API 계약·원자료 권리 미확인 | 인간 검수와 별도로 제공사 계약·원자료 권리·학습 목적별 적격성을 기록·확인하고 승인된 데이터만 학습 풀 진입 |
 | Model collapse (자기학습 루프) | IAA 임계치, 외부 벤치마크 정기 재평가 |
 | 베이스 모델 라이선스 변경 | 1순위/2순위/백업 3중 채택, 포팅 가능성 유지 |
 | 한국어 임베딩 품질 한계 | 하이브리드 검색(BM25+dense), reranker 도입 |

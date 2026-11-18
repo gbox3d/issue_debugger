@@ -1,0 +1,72 @@
+{
+  "status": "approved",
+  "recorded_date": "2026-11-18",
+  "required_votes": 3,
+  "required_approvals": 2,
+  "approvals": 3,
+  "rejections": 0,
+  "candidate_sha256": "3220357a12ffa3bfce797c18369f10588f67a9b28eac3664315f77b1529a4137",
+  "all_votes_received_before_results_shared": true,
+  "criterion": "User-requested independent document majority, separate from historical development gates.",
+  "votes": [
+    {
+      "reviewer": "docs_code_review",
+      "score_out_of_10": 9.2,
+      "vote": "approve",
+      "blocking_issues": [],
+      "candidate_sha256": "3220357a12ffa3bfce797c18369f10588f67a9b28eac3664315f77b1529a4137",
+      "independence_statement": "Did not read other reviewers opinions or votes.",
+      "findings": [
+        "All 95 individual hashes and combined candidate hash match.",
+        "README and inventory match API, relatedness sorting, server tools, three-claim cap, B/D context separation, time and partial-source gates.",
+        "Archive selection, matching-key invalidation, reuse TTL versus deletion, and adapter-call metrics match code.",
+        "Historical pauses, scores, live observations and long-term plans are separated.",
+        "Local test/build log hashes match; 128/128 tests and temporary build succeeded; git diff --check passed."
+      ]
+    },
+    {
+      "reviewer": "docs_history_review",
+      "score_out_of_10": 9.1,
+      "vote": "approve",
+      "blocking_issues": [],
+      "candidate_sha256": "3220357a12ffa3bfce797c18369f10588f67a9b28eac3664315f77b1529a4137",
+      "independence_statement": "Did not read other reviewers results or votes.json; no file, git or operational changes.",
+      "findings": [
+        "All 95 individual hashes and combined candidate hash match.",
+        "Limited pilot, pause one, general correction, pause two and later goal completion remain distinct.",
+        "Both pauses and round-one 6.8 failure remain recorded; 8.3 to 8.4 belongs to the same second review.",
+        "BE 0.8.6, FE 0.1.5, general-news-v3 and 128 tests match code and records.",
+        "November 18 test/build log hashes and November 15 report identifiers, coverage and usage match retained evidence.",
+        "Current implementation is separated from plans, RFP and GPU proposals; accuracy, cache and model-independence limitations are explicit."
+      ]
+    },
+    {
+      "reviewer": "docs_reproduction_review",
+      "score_out_of_10": 9.2,
+      "vote": "approve",
+      "blocking_issues": [],
+      "candidate_sha256": "3220357a12ffa3bfce797c18369f10588f67a9b28eac3664315f77b1529a4137",
+      "independence_statement": "Did not read other reviewers results or votes; no edits, paid calls or deployment.",
+      "findings": [
+        "All 95 individual hashes and combined candidate hash match.",
+        "Fourteen documents and 243 local links pass path, heading-anchor and candidate-inclusion checks.",
+        "Local API configuration, search keys, input scope, storage/cache and authentication limitations match code.",
+        "Test/build log hashes and generated assets match; 128/128 tests and temporary build succeeded.",
+        "November 15 live evidence, November 18 local checks, mocks and cache-module measurement are separated.",
+        "Production dist, secrets/runtime data, personal IDE settings and preexisting backup deletion have explicit commit boundaries."
+      ]
+    }
+  ],
+  "decision": "Documentation finalized by 3/3 approval. Local commit authorized by the user.",
+  "limits": [
+    "Document review scores are not model accuracy percentages.",
+    "No fresh production or external-provider validation was performed in this task."
+  ],
+  "precommit_checks": {
+    "candidate_files_match_worktree_and_index": 95,
+    "staged_changed_files": 79,
+    "forbidden_runtime_or_secret_paths": 0,
+    "credential_pattern_matches": 0,
+    "credential_scan_scope": "Common credential patterns and nonempty secret fields in .env.example; not comprehensive secret detection."
+  }
+}

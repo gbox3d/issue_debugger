@@ -2,101 +2,51 @@
 
 ## 목차
 
-- [Repository](#repository)
-- [Top-level structure](#top-level-structure)
-- [Entrypoints](#entrypoints)
-- [Backend Flow](#backend-flow)
-- [LLM / Evidence Layer](#llm--evidence-layer)
-- [Frontend](#frontend)
-- [Tests](#tests)
-- [Notes](#notes)
+- [기준과 진입점](#기준과-진입점)
+- [일반 검증 경로](#일반-검증-경로)
+- [화면과 보조 예제](#화면과-보조-예제)
+- [검사와 미구현 범위](#검사와-미구현-범위)
 
----
+## 기준과 진입점
 
-## Repository
+2026-11-18 기준 코드 지도입니다. BE 0.8.6 / FE 0.1.5, `general-news-v3`입니다. 현재 계약은 [readme.md](../readme.md), 역사와 문서 역할은 [문서 안내](../docs/README.md)를 기준으로 읽습니다.
 
-- Name: `issue_debugger`
-- Path: `/mnt/data/work/issue_debugger`
-- Product/code name: `Marbas`
-- Purpose: Korean issue verification / fact-checking assistant for extracting factual claims, checking sources and evidence, and returning a multi-layer verification report.
+| 경로 | 역할 |
+|---|---|
+| `src/server.js` | Express, `/health`, `/version`, 일반·재임 라우터 |
+| `src/routes/verify.js` | 일반 POST 검증, UUID GET 재생, no-store 응답 |
+| `src/services/verification/time.js` | 입력·URL·KST 날짜·모드·cutoff 정규화 |
+| `src/config.js` | `.env`와 환경 변수, 앱 버전·제공자·수집 설정 |
+| `.env.example` | 키가 비어 있는 설정 예제. 검색은 별도 설정 필요 |
+| `docs/validation/` | 본문을 제외한 개발 감사와 로컬 검사 기록. UUID는 익명이 아님 |
 
-## Top-level structure
+## 일반 검증 경로
 
-- `_forAI/`: AI-facing project memory, inventory, plan, and development log.
-- `docs/`: architecture and public AI consulting/reference materials.
-- `frontend/`: Vite + React UI for submitting text/URL and viewing verification results.
-- `images/`: architecture diagram assets (`png`, `svg`, `mermaid`).
-- `src/`: Express API, verification pipeline, agents, LLM/RAG adapters, utilities.
-- `.env.example`: safe environment variable template.
-- `.gitignore`: ignores dependencies, generated files, trusted DB JSON seeds, and local `.env`.
-- `package.json`: backend package and runtime scripts.
-- `readme.md`: project overview, API notes, local run instructions, frontend notes.
-- `test.http`: manual HTTP smoke requests for `/health` and `/version`.
+1. `verification/service.js`가 입력을 정규화하고 URL-only이면 본문을 확보합니다. `claimExtractor.js`가 원문 구절을 보존한 주장을 추출하며 최대 3개를 처리합니다.
+2. `web/newsTools.js`는 `search_news`, `search_web`, `fetch_article` 내부 계약입니다. 서버가 실행하며 모델 자율 도구 루프·MCP 서버는 없습니다.
+3. `verification/retrieval.js`는 주 검색·반증·언어 보완, 관련성·중복·출처 분산, 수집 성공/실패를 관리합니다. 적격 6건 목표·수집 18회·동시 3회·검색 제공자 12회·수집 시간 60초 예산이며 부분 원문은 별도로 남습니다.
+4. `web/naverSearch.js`는 `sort=sim`, `web/tavilySearch.js`는 제공자 관련도 순서를 유지합니다. 상세 어댑터는 disabled/error/no_results/ok를 구분하며 기존 배열 반환 wrapper도 남아 있습니다.
+5. `web/urlFetch.js`는 HTTP(S)·기본 포트·공개 주소·리다이렉트를 검사하고 크기·시간을 제한합니다. 일반 HTML은 Readability/JSDOM을 사용하며 원문 발행 메타데이터와 추출 범위를 기록합니다. 스크립트 실행과 영상/오디오 전사는 하지 않습니다. DNS 재바인딩 잔여 위험은 [백로그](memo.md#보안-백로그)입니다.
+6. `modules/agents/generalFactcheck.js`가 B/D를 별도 문맥에서 실행하고 입력 보존·원문 인용·시점을 검사합니다. 짧거나 잘린 본문은 반증 확인용 문맥이며 확정 인용은 금지합니다. `dated_report`는 완료 사건의 보도만 허용합니다. 모델용 짧은 ID는 서버의 원문 ID로 정확히 복원합니다.
+7. `modules/aggregator.js`는 적격성과 동의·점수 조건에 따라 true/false/hold를 정합니다. 문맥 설명용 인용은 확정 근거와 분리합니다. 무결성 실패 시 서술형 요약·시점 설명을 숨깁니다.
+8. `verification/store.js`는 원문·해시·시각·보고서를 원자 저장합니다. `as_known`은 URL별 cutoff 이전 최신 저장본에서 관련 자료를 선택하며 새 웹 요청을 하지 않습니다.
+9. `verification/verifiedCache.js`는 같은 의미 입력·자료·버전의 통과 검토만 재사용합니다. 현재 수집 뒤 조회하며 `as_known`은 적격 저장본을 사용합니다. TTL 24시간은 재사용 만료이고 삭제 기능은 아닙니다. 강제 재검토는 일치하는 키를 먼저 무효화합니다.
+10. `verification/executionPolicy.js`는 A/C 선택과 요청 내부 동일 입력 공유를 관리합니다. B/D 역할은 합치지 않습니다. `llm/usageMetrics.js`는 요청별 어댑터 호출·제공사 토큰·관측 시간·생략/캐시를 기록하며 SDK HTTP 재시도·청구액은 측정하지 않습니다.
 
-## Entrypoints
+`llm/index.js`는 공통 `chatJson()` 제공자 라우터이고 `anthropicAdapter.js`/`openaiAdapter.js`는 기존 JSON 결과 계약을 유지합니다. 기본은 Anthropic Opus이며 검토 B/D의 기반 모델은 같습니다. `agents/origin.js`(A), `agents/intent.js`(C)는 선택 기능입니다. 과거 `agents/factcheck.js`와 `rag/trustedDb.js`는 legacy 경로이며 일반 `/api/verify`에서 사용하지 않습니다. gitignored 로컬 seed는 새 복제본의 일반 검증 필수 파일이 아닙니다.
 
-- Backend development: `npm run dev` -> `node --watch src/server.js`.
-- Backend production-style start: `npm start` -> `node src/server.js`.
-- Backend API routes:
-  - `GET /health`
-  - `GET /version`
-  - `POST /api/verify`
-- Frontend development: `cd frontend && npm run dev`.
-- Frontend build: `cd frontend && npm run build`.
-- Frontend runtime config: `frontend/public/config.json` currently points browser calls to port `21030` when served from the same host.
+## 화면과 보조 예제
 
-## Backend Flow
+- `frontend/src/App.jsx`: 일반 검증 기본 화면, 보고서 재생·재검증, 최근 UUID 10개.
+- `VerifyForm.jsx`: 문장·기사 URL·보조 원문·대상일·자료 모드. 기사 최대 3개 주장 범위 표시.
+- `ResultPanel.jsx`, `ClaimCard.jsx`, `verificationDisplay.js`: 보도/직접 기록·출처 역할·미검증 범위·실패·자원 사용량, 구형 보고서 안전 표시.
+- `frontend/src/api.js`: `public/config.json`으로 API 주소 결정. 커밋 값 `/marbas`는 운영용이고 로컬 개발은 README의 별도 API 주소 설정 필요.
+- `src/routes/personnel.js`, `services/personnel/`, `PersonnelPanel.jsx`: 기상청 공식 종료 재임기간 예제, 자체 저장·시점 검사·UUID 보고서. 일반 목표의 정확도 근거가 아닙니다.
 
-- `src/server.js`: creates Express app, CORS headers, JSON body parsing, health/version endpoints, and mounts `verifyRouter`.
-- `src/routes/verify.js`: accepts `{ text?, url?, collected_at? }`. If `url` is given, crawls it (SSRF-safe) and uses the body as the verification input when `text` is empty (URL-only input); YouTube URLs are detected and skipped with a warning. Requires text **or** a fetchable url. Extracts claims, runs three agents per claim in parallel, aggregates, and returns JSON with `input_enrichment` + `warnings`.
-- `src/modules/claimExtractor.js`: calls the LLM with claim-extraction prompts and validates minimal claim shape.
-- `src/modules/agents/origin.js`: Agent A, origin/timeline candidate analysis. Uses web search stub only when enabled.
-- `src/modules/agents/factcheck.js`: Agent B, trusted DB + web evidence pack, `supported|refuted|unknown`.
-- `src/modules/agents/intent.js`: Agent C, propaganda/bias/emotion-trigger analysis.
-- `src/modules/aggregator.js`: combines fact confidence, source reliability, and propaganda risk into `true|false|hold`.
-- `src/modules/report.js`: shapes final claim report for API/UI use.
+## 검사와 미구현 범위
 
-## LLM / Evidence Layer
+`npm test`는 로컬 모의 자료·모의 모델을 포함한 회귀 검사입니다. 2026-11-18 **128/128 통과**, `npm run build -- --outDir /tmp/marbas-commit-build-20261118`도 통과했습니다. [이번 검사 증거](../docs/validation/20261118/verification.json)를 봅니다. 테스트는 실제 인터넷·모델 정확도 평가가 아닙니다.
 
-- `src/services/llm/index.js`: LLM Adapter **router**. Exposes the shared contract `chatJson({ messages, schemaName, temperature?, provider? })` used by claimExtractor and all three agents, plus `getLlmInfo()` (used by `/version`). Selects provider from `config.llm.provider` (default `openai`); `provider` arg overrides per call (for future per-agent routing / RFP "2+ models").
-- `src/services/llm/openaiAdapter.js`: OpenAI adapter — raw `fetch` to Chat Completions with `response_format: { type: "json_object" }` + lenient JSON recovery. Replaces the old `ollamaClient.js`.
-- `src/services/llm/anthropicAdapter.js`: Anthropic adapter via `@anthropic-ai/sdk`. Splits the system message into the top-level `system` param, forces JSON via prompt instruction + lenient parse (no `response_format`/prefill on Claude), sends **no** `temperature` (Sonnet 5 400s on it), disables thinking for fast extraction, wraps `Anthropic.APIError`, and handles `stop_reason: "refusal"`.
-- Both adapters share the interface `{ name, tier, model, cost_per_1k, chatJson(), health() }`.
-- `src/config.js`: reads `.env` — `LLM_PROVIDER`, `OPENAI_*`, `ANTHROPIC_*` (with `CLAUDE_API_KEY` alias, `ANTHROPIC_MODEL` default `claude-sonnet-5`, `ANTHROPIC_MAX_TOKENS`), RAG settings, and Tavily web-search settings.
-- `src/services/llm/prompts.js`: JSON-only prompt contracts for claim extraction and the three agents.
-- `src/services/llm/schemas.js`: lightweight runtime shape guards.
-- `src/services/rag/trustedDb.js`: loads trusted DB JSON from `TRUSTED_DB_PATH`, then keyword-scores docs with `credibility_weight`.
-- `src/services/web/naverSearch.js`: **Naver news search** (`searchNaverNews`, `hasNaver`). Korean-native, returns `pubDate` per item, `sort=date` (newest first). Used for **time-sensitive claims** (routed in `verify.js`); strips HTML/entities, normalizes to the same shape as Tavily. Keys: `NAVER_CLIENT_ID`/`NAVER_CLIENT_SECRET`.
-- `src/services/web/tavilySearch.js`: web search via Tavily API (`searchWeb`, `topic` general|news, extracts dates from URLs, sorts newest-first). Used for non-time-sensitive claims and as the Naver fallback. Query is built from the claim's `search_query` (subject/object entities), not the full sentence. Fails soft (returns `[]` + warning) if the key is missing or the request errors.
-- `src/services/web/urlFetch.js`: **SSRF-safe URL crawler** (`fetchUrl`, `isYouTubeUrl`). Blocks non-http(s) schemes, non-standard ports, and any host that resolves to a private/reserved/loopback/link-local IP (incl. cloud metadata `169.254.169.254`, IPv4-mapped/NAT64 IPv6 via byte-level check). Follows redirects manually and re-validates each hop. Caps response size/time. Extracts title + `article:published_time` + body text (deterministic minimal, per plan). Fails soft with a warning. Config via `config.crawl` (`CRAWL_*`). Known residual: DNS-rebinding window (baseline pilot; pin-IP dispatcher = future hardening).
+2026-11-15 실제 키워드·URL-only·재생·모바일 검증과 고정 원문 캐시 모듈 측정은 [당시 감사](../docs/validation/20261115/operational-audit.json), [캐시 측정](../docs/validation/20261115/cache-benchmark.json)에 있습니다. 이전 35개·67개 검사와 6건 수동 근거 URL 시험은 [과거 구현 기록](../docs/implementation_review_20261115.md)에서 분리합니다.
 
-## Frontend
-
-- `frontend/src/App.jsx`: owns loading/error/result state and submits verification requests.
-- `frontend/src/api.js`: loads `public/config.json`, resolves API base URL, calls `/api/verify` and `/version`.
-- `frontend/src/components/VerifyForm.jsx`: text/URL input form.
-- `frontend/src/components/ResultPanel.jsx`: renders API verification output.
-- `frontend/src/components/ClaimCard.jsx`: claim-level display component.
-- CSS lives beside the relevant components plus `frontend/src/index.css`.
-
-## Tests
-
-- No automated test script is currently declared in root or frontend `package.json`.
-- Manual smoke checks exist in `test.http` for `GET /health` and `GET /version`.
-- Useful manual verification path:
-  - Start backend with `npm run dev`.
-  - Start frontend with `cd frontend && npm run dev`.
-  - Submit Korean issue text through the UI or call `POST /api/verify` directly.
-
-## Notes
-
-- `.env` was previously tracked in the local commit and must remain removed from Git history before pushing.
-- `readme.md` still describes the project as an Ollama prototype; runtime is now OpenAI **or** Anthropic behind the LLM Adapter router. Docs drift to clean up.
-- `src/services/rag/sample_trusted_db.json` now has 4 seed docs (T1-tier Korean government/academic sources) for demo purposes; still far short of a real corpus.
-- URL input is now crawled (SSRF-safe) — URL-only verification works end to end (backend + UI). YouTube transcript extraction is not implemented yet (returns a warning).
-- Opinion/non-verification claims are not filtered out before agent execution yet.
-- Aggregation is still confidence-threshold based; planned trust-tier gate rules live in `_forAI/plan.md`.
-- **Temporal (시간 개념)**: the pipeline injects an `as_of` (current date) into every prompt; claim extraction produces `is_time_sensitive` + a `search_query` (subject/object entities). For time-sensitive claims, `verify.js` gathers **two time windows** — recent (Naver news, dated) + past/background (Tavily general = wiki/namu) — and merges them so Agent B can contrast past vs recent. Agent B returns `time_sensitive`/`situation_changed`/`temporal_note`/`sentiment_timeline`. The aggregator gates all temporal output on `claim.is_time_sensitive` (so settled historical facts get none) and emits a `temporal` block + warnings; the UI renders a "⏱ 상황 변화 감지" banner with a colored sentiment timeline. Evaluative claims (opinions) are described as sentiment-over-time, not judged true/false. Next: sentiment-targeted search + Narrative agent (plan Phase 7), past-window date-range news.
-- Web search is now real (Tavily) and confirmed working end-to-end (backend + frontend) with a live `TAVILY_API_KEY` in `.env`.
-- Both LLM providers are live and confirmed end-to-end: `LLM_PROVIDER=openai` (gpt-5.4-mini) and `LLM_PROVIDER=anthropic` (claude-sonnet-5) both return valid JSON through the full verify pipeline. Switch via the `LLM_PROVIDER` env var.
-- `@anthropic-ai/sdk` is now a runtime dependency.
+운영 호출의 사용량은 어댑터 호출 기준이며 캐시 모듈 2→0회 결과를 일반 적중률이나 전체 API 절감률로 확대하지 않습니다. 전체 정확도 골드셋, 다중모델 토론, 인간 검수·정정 전파, Student·벡터 DB, 사용자별 인증·자동 삭제 정책은 미구현입니다.

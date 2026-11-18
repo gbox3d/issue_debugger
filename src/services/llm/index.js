@@ -1,6 +1,7 @@
 import { config } from "../../config.js";
 import { openaiAdapter } from "./openaiAdapter.js";
 import { anthropicAdapter } from "./anthropicAdapter.js";
+export { withUsageMetrics, getUsageMetrics, recordSkippedLlmCall, recordVerifiedCacheHit } from "./usageMetrics.js";
 
 /**
  * LLM Adapter 라우터.

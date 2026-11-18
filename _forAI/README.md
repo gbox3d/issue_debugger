@@ -2,62 +2,33 @@
 
 ## 목차
 
-- [One-line summary](#one-line-summary)
-- [Current State / Handoff (2026-07-07)](#current-state--handoff-2026-07-07)
-- [Read order](#read-order)
-- [File roles](#file-roles)
-- [Quick Project Map](#quick-project-map)
-- [Careful Points](#careful-points)
-- [Repository](#repository)
+- [현재 기준](#현재-기준)
+- [읽는 순서](#읽는-순서)
+- [주의할 구분](#주의할-구분)
 
----
+## 현재 기준
 
-## One-line summary
+2026-11-18 문서 정리 기준, 저장소는 `/home/gbox3d/work/issue_debugger`(실제 경로 `/mnt/data/work/issue_debugger`)입니다. Marbas는 시간에 따라 달라지는 일반 주장을 원문과 대조하는 보조 서비스입니다. BE **0.8.6**, FE **0.1.5**, 규칙 **general-news-v3**, 기본 제공자 Anthropic·모델 **claude-opus-5-5**입니다.
 
-`issue_debugger` is the Marbas prototype: a Korean **issue** verification / fact-checking assistant — Express API + agent pipeline (claim → origin/factcheck/intent → aggregate → report), dual LLM backend (OpenAI **or** Anthropic behind an adapter router), SSRF-safe URL crawling, Naver/Tavily web search, a **temporal (time-aware) layer**, and a React frontend.
+2026-11-15의 검색 목표·운영 검증은 독립 최종 8.4/10, 심사 2/3으로 통과했습니다. 1차 6.8 실패와 이전 목표의 중단 2회는 역사입니다. 이후 키워드-only·기사 URL-only를 검증해 0.8.5 당시의 시험 공백을 보완했습니다. 2026-11-18에는 자동 테스트 128/128과 임시 출력 빌드를 재확인했으며 운영 재배포·유료 재시험은 하지 않았습니다.
 
-## Current State / Handoff (2026-07-07)
+현재 API·실행·한도·저장 계약은 [루트 README](../readme.md), 개발 심사와 과거 관측은 [목표 기록](../docs/article_search_goal_20261115.md), 이번 독립 문서 표결은 [문서 심사](../docs/documentation_review_20261118.md)를 봅니다. 점수와 사례 통과는 전체 정확도나 모든 주장의 검증 완료를 뜻하지 않습니다.
 
-- **Versions**: backend `0.8.0` (`package.json` + `src/config.js`), frontend `0.1.0` (`frontend/package.json`). Bump patch (+1) each change unless told otherwise; see `memo.md` → 버전 규칙.
-- **Deployed**: `http://bsqai01.iptime.org:21080/marbas/` — nginx serves `/mnt/data/pds/marbas` (symlink → `frontend/dist`, rebuild with `cd frontend && npm run build`); backend runs under **PM2** as `marbas-api` on port 21030 (`pm2 restart marbas-api` after backend changes; `pm2 save` done).
-- **Keys**: live in `.env` (untracked) — OpenAI, Anthropic, Tavily, Naver all set. `LLM_PROVIDER` switches OpenAI/Anthropic.
-- **Done today**: dual-LLM adapter; SSRF-safe crawler + URL-only input; **time axis** = as_of injection → subject/object `search_query` → Naver news (dated, Korean) → past+recent contrast → `situation_changed` + `sentiment_timeline` (여론 시계열) in UI.
-- **Next candidates** (see `dev_log.md` 2026-07-07 tail): sentiment-targeted search + Narrative agent (plan Phase 7); past-window date-range news; 6-등급 판정 매핑 (RFP); `/api/verify` 오픈API 문서화. Security backlog (DNS rebinding 등) parked in `memo.md`.
+## 읽는 순서
 
-## Read order
+1. `README.md`: 인수인계 기준.
+2. [inventory.md](inventory.md): 현재 코드·명령·미구현 범위.
+3. [memo.md](memo.md): 버전·검토 원칙·보안 백로그.
+4. [dev_log.md](dev_log.md): 날짜별 이력. 과거 진행 상태는 해당 시점에만 적용.
+5. [plan.md](plan.md): 다음 작업과 보존된 장기 로드맵.
 
-1. `README.md`
-2. `inventory.md`
-3. `memo.md`
-4. `dev_log.md`
-5. `plan.md`
+전체 문서 역할은 [docs/README.md](../docs/README.md)에 정리합니다.
 
-## File roles
+## 주의할 구분
 
-- `inventory.md`: what exists in the repository, where the runtime starts, and known implementation gaps.
-- `memo.md`: short rules and durable project notes.
-- `dev_log.md`: chronological AI-assisted project notes and maintenance history.
-- `plan.md`: product/architecture roadmap and phased implementation plan.
-
-## Quick Project Map
-
-- Backend: `src/server.js` starts an Express service with `/health`, `/version`, and `/api/verify`.
-- Verification flow: `claimExtractor -> origin/factcheck/intent agents -> aggregate -> report`, with an `as_of` (time) threaded through every prompt.
-- LLM layer: `src/services/llm/index.js` (router) + `openaiAdapter.js` / `anthropicAdapter.js`; shared `chatJson()` contract, provider from `LLM_PROVIDER`.
-- Search/crawl: `src/services/web/naverSearch.js` (Korean news, dated), `tavilySearch.js` (general/fallback), `urlFetch.js` (SSRF-safe crawler).
-- RAG layer: `src/services/rag/trustedDb.js` reads a local JSON trusted DB (4 seed docs) and does keyword scoring.
-- Frontend: `frontend/` is a Vite React app that calls `/api/verify` and displays claim reports incl. the temporal banner + sentiment timeline.
-- Planning docs: `docs/architecture.md`, `docs/ref.md`, `docs/rfp_review.md`, and `_forAI/plan.md`.
-
-## Careful Points
-
-- `.env` must stay untracked (it holds real keys); use `.env.example` for safe defaults.
-- Deployed via nginx symlink + PM2 — rebuild frontend and `pm2 restart marbas-api` for changes to show (see Handoff above).
-- `src/services/rag/sample_trusted_db.json` is git-ignored by pattern but present locally (4 seed docs).
-- Temporal output is gated on `claim.is_time_sensitive` (settled historical facts get no timeline). The "past" contrast window currently leans on Tavily general (wiki/namu), since Naver has no date-range filter.
-- `plan.md` is the April roadmap (Phases 1–12); today's work covers Phase 1/4 + a new time axis not in the original plan — read `dev_log.md` (2026-07-06/07) for the true current state.
-
-## Repository
-
-- Name: `issue_debugger`
-- Path: `/mnt/data/work/issue_debugger`
+- 일반 경로는 서버의 검색·수집 도구와 원문 스냅샷을 사용합니다. legacy RAG helper와 로컬 seed는 일반 API의 검색 DB가 아닙니다.
+- B/D는 같은 모델의 별도 문맥입니다. A/C는 선택이며 새 적격 검토가 아닌 경우 캐시·보류로 호출을 생략할 수 있습니다.
+- `as_known`은 실제 과거 저장본만 사용합니다. 기상청 예제의 종료 재임기간 범위를 전체 제품으로 확대하지 않습니다.
+- `.env`, 런타임 `data/`, `dist/`, `docs/raw/`는 커밋 대상이 아닙니다. UUID 보고서는 인증 없이 조회할 수 있으므로 감사 ID는 익명 자료가 아닙니다.
+- 이 서버의 `frontend/dist`는 운영 서비스에 연결됩니다. 검증 빌드는 `/tmp/` 등 별도 출력 경로를 사용합니다.
+- 현재 기능 계약과 장기 설계·과거 실험의 '현재' 표현을 혼동하지 않습니다. 모델·규칙 변경 시 판정 버전과 캐시 적격성을 함께 검토합니다.

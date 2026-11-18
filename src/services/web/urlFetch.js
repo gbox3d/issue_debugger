@@ -2,6 +2,8 @@ import dnsp from "node:dns/promises";
 import net from "node:net";
 import { config } from "../../config.js";
 import { logWarn } from "../../utils/logger.js";
+import { JSDOM } from "jsdom";
+import { Readability } from "@mozilla/readability";
 
 /**
  * SSRF-safe URL 크롤러.
@@ -135,7 +137,7 @@ function decodeEntities(s) {
     .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)));
 }
 
-function extractFromHtml(html) {
+export function extractFromHtml(html, url = "https://example.org/", preferArticle = true) {
   const pick = (re) => {
     const m = html.match(re);
     return m ? decodeEntities(m[1]).trim() : null;
@@ -143,43 +145,84 @@ function extractFromHtml(html) {
   const title =
     pick(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i) ||
     pick(/<title[^>]*>([\s\S]*?)<\/title>/i);
-  const published_at =
+  let published_at =
     pick(/<meta[^>]+property=["']article:published_time["'][^>]+content=["']([^"']+)["']/i) ||
-    pick(/<meta[^>]+name=["']date["'][^>]+content=["']([^"']+)["']/i) ||
-    pick(/<time[^>]+datetime=["']([^"']+)["']/i);
+    pick(/<meta[^>]+name=["']date["'][^>]+content=["']([^"']+)["']/i);
+  let published_at_source = published_at ? "page_metadata" : null;
 
-  const body = decodeEntities(
+  let article = null;
+  // Scripts and external resources are disabled by JSDOM's defaults. Readability
+  // removes navigation/forms so document limits apply to the article, not menus.
+  if (preferArticle) {
+    const dom = new JSDOM(html, { url });
+    try {
+      const doc = dom.window.document;
+      const dateMeta = [...doc.querySelectorAll("meta")].find(node =>
+        /^(article:published_time|date|datepublished|pubdate|publishdate|parsely-pub-date)$/i.test(node.getAttribute("property") || node.getAttribute("name") || ""));
+      const metadataDate = dateMeta?.getAttribute("content");
+      if (metadataDate && Number.isFinite(Date.parse(metadataDate))) {
+        published_at = metadataDate; published_at_source = "page_metadata";
+      } else {
+        // Only article-level JSON-LD dates qualify; a site's footer year or
+        // an unrelated nested recommendation is not the article's date.
+        const articleDate = value => {
+          if (Array.isArray(value)) return value.map(articleDate).find(Boolean);
+          if (!value || typeof value !== "object") return null;
+          const types = Array.isArray(value["@type"]) ? value["@type"] : [value["@type"]];
+          if (types.some(type => /^(NewsArticle|Article|ReportageNewsArticle|BlogPosting)$/.test(type)) &&
+              typeof value.datePublished === "string" && Number.isFinite(Date.parse(value.datePublished))) return value.datePublished;
+          return articleDate(value["@graph"]);
+        };
+        for (const script of doc.querySelectorAll('script[type="application/ld+json"]')) {
+          try {
+            const date = articleDate(JSON.parse(script.textContent));
+            if (date) { published_at = date; published_at_source = "page_metadata"; break; }
+          } catch { /* malformed publisher metadata cannot establish a date */ }
+        }
+        if (!published_at) {
+          const date = doc.querySelector("article time[datetime], main time[datetime]")?.getAttribute("datetime");
+          if (date && Number.isFinite(Date.parse(date))) { published_at = date; published_at_source = "page_time_element"; }
+        }
+      }
+      article = new Readability(doc).parse();
+    }
+    finally { dom.window.close(); }
+  }
+  const body = article?.textContent?.trim() ? article.textContent.replace(/\s+/g, " ").trim() : decodeEntities(
     html
       .replace(/<script[\s\S]*?<\/script>/gi, " ")
       .replace(/<style[\s\S]*?<\/style>/gi, " ")
       .replace(/<[^>]+>/g, " ")
   )
     .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, config.crawl.maxTextChars);
+    .trim();
 
-  return { title, published_at, text: body };
+  if (!Number.isFinite(Date.parse(published_at))) { published_at = null; published_at_source = null; }
+  return { title, published_at, published_at_source, text: body.slice(0, config.crawl.maxTextChars), text_truncated: body.length > config.crawl.maxTextChars,
+    extraction_scope: article?.textContent?.trim() ? "article" : "page_text" };
 }
 
 async function readCapped(resp, maxBytes) {
   const lenHeader = Number(resp.headers.get("content-length") ?? 0);
   if (lenHeader && lenHeader > maxBytes) throw new Error(`content too large: ${lenHeader}B`);
-  if (!resp.body) return "";
+  if (!resp.body) return { text: "", truncated: false };
   const reader = resp.body.getReader();
   const chunks = [];
   let total = 0;
+  let truncated = false;
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
     total += value.length;
     if (total > maxBytes) {
+      truncated = true;
       chunks.push(value.subarray(0, value.length - (total - maxBytes)));
       await reader.cancel();
       break;
     }
     chunks.push(value);
   }
-  return Buffer.concat(chunks).toString("utf-8");
+  return { text: Buffer.concat(chunks).toString("utf-8"), truncated };
 }
 
 function fail(warning) {
@@ -187,7 +230,7 @@ function fail(warning) {
   return { ok: false, final_url: null, title: null, published_at: null, text: null, warning };
 }
 
-export async function fetchUrl({ url }) {
+export async function fetchUrl({ url, preferArticle = false }) {
   if (!config.crawl.enabled) return fail("crawling disabled");
 
   let current;
@@ -223,40 +266,37 @@ export async function fetchUrl({ url }) {
           Accept: "text/html,application/xhtml+xml,text/plain",
         },
       });
+      if (resp.status >= 300 && resp.status < 400) {
+        const loc = resp.headers.get("location");
+        if (!loc) return fail(`redirect without location (${resp.status})`);
+        try {
+          current = new URL(loc, current); // 상대경로 해석; 다음 루프에서 재검증
+        } catch {
+          return fail(`invalid redirect target: ${loc}`);
+        }
+        continue;
+      }
+
+      if (!resp.ok) return fail(`HTTP ${resp.status}`);
+
+      const ctype = (resp.headers.get("content-type") || "").toLowerCase();
+      if (!/text\/html|text\/plain|application\/xhtml/.test(ctype)) {
+        return fail(`unsupported content-type: ${ctype || "unknown"}`);
+      }
+
+      const body = await readCapped(resp, config.crawl.maxBytes);
+      const extracted = /text\/plain/.test(ctype)
+        ? { title: null, published_at: null, text: body.text.slice(0, config.crawl.maxTextChars), text_truncated: body.text.length > config.crawl.maxTextChars, extraction_scope: "plain_text" }
+        : extractFromHtml(body.text, current.href, preferArticle);
+      const { title, published_at, published_at_source, text, text_truncated, extraction_scope } = extracted;
+      if (!text) return fail("no extractable text");
+      return { ok: true, final_url: current.href, title, published_at, published_at_source: published_at_source ?? null, text, text_truncated: body.truncated || text_truncated, extraction_scope, warning: null };
     } catch (e) {
       return fail(`fetch failed: ${String(e?.message ?? e)}`);
     } finally {
+      // The deadline covers response headers AND the body stream.
       clearTimeout(t);
     }
-
-    if (resp.status >= 300 && resp.status < 400) {
-      const loc = resp.headers.get("location");
-      if (!loc) return fail(`redirect without location (${resp.status})`);
-      try {
-        current = new URL(loc, current); // 상대경로 해석; 다음 루프에서 재검증
-      } catch {
-        return fail(`invalid redirect target: ${loc}`);
-      }
-      continue;
-    }
-
-    if (!resp.ok) return fail(`HTTP ${resp.status}`);
-
-    const ctype = (resp.headers.get("content-type") || "").toLowerCase();
-    if (!/text\/html|text\/plain|application\/xhtml/.test(ctype)) {
-      return fail(`unsupported content-type: ${ctype || "unknown"}`);
-    }
-
-    let html;
-    try {
-      html = await readCapped(resp, config.crawl.maxBytes);
-    } catch (e) {
-      return fail(String(e?.message ?? e));
-    }
-
-    const { title, published_at, text } = extractFromHtml(html);
-    if (!text) return fail("no extractable text");
-    return { ok: true, final_url: current.href, title, published_at, text, warning: null };
   }
 
   return fail("too many redirects");

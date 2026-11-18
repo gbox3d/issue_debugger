@@ -9,7 +9,8 @@ function loadEnvFile(path = ".env") {
     const i = t.indexOf("=");
     if (i < 0) continue;
     const key = t.slice(0, i).trim();
-    const val = t.slice(i + 1).trim();
+    const rawVal = t.slice(i + 1).trim();
+    const val = rawVal.replace(/^(["'])(.*)\1$/, "$2");
     if (!(key in process.env)) process.env[key] = val;
   }
 }
@@ -18,11 +19,13 @@ loadEnvFile();
 
 export const config = {
   port: Number(process.env.PORT ?? 8080),
-  version: "0.8.1",
+  // HOST=127.0.0.1 이면 nginx 게이트웨이 뒤에서만 응답한다 (미설정 시 기존처럼 전체 인터페이스)
+  host: process.env.HOST ?? "0.0.0.0",
+  version: "0.8.6",
 
   // 활성 LLM provider 선택 (openai | anthropic)
   llm: {
-    provider: (process.env.LLM_PROVIDER ?? "openai").toLowerCase(),
+    provider: (process.env.LLM_PROVIDER ?? "anthropic").toLowerCase(),
   },
 
   openai: {
@@ -34,9 +37,9 @@ export const config = {
   anthropic: {
     // CLAUDE_API_KEY 도 alias 로 인식
     apiKey: process.env.ANTHROPIC_API_KEY ?? process.env.CLAUDE_API_KEY ?? "",
-    model: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-5",
+    model: process.env.ANTHROPIC_MODEL || "claude-opus-5-5",
     timeoutMs: Number(process.env.ANTHROPIC_TIMEOUT_MS ?? 60000),
-    maxTokens: Number(process.env.ANTHROPIC_MAX_TOKENS ?? 4096),
+    maxTokens: Number(process.env.ANTHROPIC_MAX_TOKENS ?? 8192),
   },
 
   rag: {
